@@ -1,80 +1,39 @@
 import { useState } from "react";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CaseCard from "@/components/CaseCard";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
-const allCauses = [
-  {
-    id: "1",
-    title: "Education for Rural Children",
-    description: "Help provide quality education and learning materials to underprivileged children in rural communities.",
-    image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=800&auto=format&fit=crop",
-    raised: 45000,
-    goal: 75000,
-    category: "Education",
-  },
-  {
-    id: "2",
-    title: "Clean Water Initiative",
-    description: "Bring clean and safe drinking water to communities facing severe water scarcity.",
-    image: "https://images.unsplash.com/photo-1541544537156-7627a7a4aa1c?w=800&auto=format&fit=crop",
-    raised: 28000,
-    goal: 50000,
-    category: "Healthcare",
-  },
-  {
-    id: "3",
-    title: "Emergency Relief Fund",
-    description: "Support families affected by natural disasters with immediate aid and recovery assistance.",
-    image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&auto=format&fit=crop",
-    raised: 62000,
-    goal: 100000,
-    category: "Emergency",
-  },
-  {
-    id: "4",
-    title: "Healthcare Access Program",
-    description: "Provide medical supplies and healthcare access to underserved communities worldwide.",
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&auto=format&fit=crop",
-    raised: 35000,
-    goal: 60000,
-    category: "Healthcare",
-  },
-  {
-    id: "5",
-    title: "Women Empowerment Initiative",
-    description: "Support women entrepreneurs with training, resources, and microloans to start businesses.",
-    image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop",
-    raised: 18000,
-    goal: 40000,
-    category: "Community",
-  },
-  {
-    id: "6",
-    title: "Hunger Relief Program",
-    description: "Provide nutritious meals to families facing food insecurity and malnutrition.",
-    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop",
-    raised: 52000,
-    goal: 80000,
-    category: "Emergency",
-  },
-];
+const categories = ["All", "Education", "Healthcare", "Emergency", "Community", "General"];
 
-const categories = ["All", "Education", "Healthcare", "Emergency", "Community"];
-
-const Causes = () => {
+const Cases = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const filteredCauses = allCauses.filter((cause) => {
-    const matchesSearch = cause.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cause.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === "All" || cause.category === activeCategory;
+  const { data: cases = [], isLoading, error } = useQuery({
+    queryKey: ["cases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("causes")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredCases = cases.filter((caseItem) => {
+    const matchesSearch =
+      caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (caseItem.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    const matchesCategory = activeCategory === "All" || caseItem.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -91,7 +50,7 @@ const Causes = () => {
               Explore <span className="text-gradient-primary">Cases</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover meaningful campaigns and find the perfect case to support. 
+              Discover meaningful campaigns and find the perfect case to support.
               Every contribution makes a lasting impact.
             </p>
           </div>
@@ -102,7 +61,7 @@ const Causes = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search causes..."
+                  placeholder="Search cases..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-12 h-12"
@@ -127,7 +86,7 @@ const Causes = () => {
           {/* Results */}
           <div className="mb-6 flex items-center justify-between">
             <p className="text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredCauses.length}</span> cases
+              Showing <span className="font-semibold text-foreground">{filteredCases.length}</span> cases
             </p>
             <Button variant="ghost" size="sm">
               <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -135,14 +94,41 @@ const Causes = () => {
             </Button>
           </div>
 
-          {/* Causes Grid */}
-          {filteredCauses.length > 0 ? (
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="text-center py-16">
+              <p className="text-xl text-destructive mb-4">Failed to load cases</p>
+              <p className="text-muted-foreground">Please try again later</p>
+            </div>
+          )}
+
+          {/* Cases Grid */}
+          {!isLoading && !error && filteredCases.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredCauses.map((cause) => (
-                <CaseCard key={cause.id} {...cause} />
+              {filteredCases.map((caseItem) => (
+                <CaseCard
+                  key={caseItem.id}
+                  id={caseItem.id}
+                  title={caseItem.title}
+                  description={caseItem.description || ""}
+                  image={caseItem.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop"}
+                  raised={Number(caseItem.raised_amount)}
+                  goal={Number(caseItem.goal_amount)}
+                  category={caseItem.category}
+                />
               ))}
             </div>
-          ) : (
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && filteredCases.length === 0 && (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground mb-4">No cases found</p>
               <p className="text-muted-foreground">Try adjusting your search or filters</p>
@@ -156,4 +142,4 @@ const Causes = () => {
   );
 };
 
-export default Causes;
+export default Cases;
