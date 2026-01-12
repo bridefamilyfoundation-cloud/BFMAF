@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -17,12 +17,13 @@ const Footer = () => {
                 <Heart className="w-5 h-5 text-accent-foreground" />
               </div>
               <span className="text-xl font-serif font-bold">
-                Hope<span className="text-accent">Fund</span>
+                <span className="text-accent">BFMAF</span>
               </span>
             </Link>
-            <p className="text-primary-foreground/70 mb-6">
-              Empowering communities through transparent, impactful financial aid programs.
+            <p className="text-primary-foreground/70 mb-4 text-sm italic">
+              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
             </p>
+            <p className="text-primary-foreground/50 text-xs mb-6">— 1 Corinthians 12:26</p>
             <div className="flex gap-4">
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground flex items-center justify-center transition-all duration-300">
                 <Facebook className="w-5 h-5" />
@@ -33,9 +34,6 @@ const Footer = () => {
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground flex items-center justify-center transition-all duration-300">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground flex items-center justify-center transition-all duration-300">
-                <Linkedin className="w-5 h-5" />
-              </a>
             </div>
           </div>
 
@@ -43,27 +41,38 @@ const Footer = () => {
           <div>
             <h4 className="font-serif font-semibold text-lg mb-6">Quick Links</h4>
             <ul className="space-y-3">
-              {["About Us", "Our Causes", "How It Works", "Success Stories", "Blog"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                    {link}
-                  </a>
-                </li>
-              ))}
+              <li>
+                <Link to="/about" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/cases" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  View Cases
+                </Link>
+              </li>
+              <li>
+                <Link to="/get-help" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Request Assistance
+                </Link>
+              </li>
+              <li>
+                <Link to="/donate" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Donate
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* How We Help */}
           <div>
-            <h4 className="font-serif font-semibold text-lg mb-6">Support</h4>
+            <h4 className="font-serif font-semibold text-lg mb-6">How We Help</h4>
             <ul className="space-y-3">
-              {["FAQs", "Contact Us", "Privacy Policy", "Terms of Service", "Volunteer"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                    {link}
-                  </a>
-                </li>
-              ))}
+              <li className="text-primary-foreground/70">🙏 Prayers</li>
+              <li className="text-primary-foreground/70">👋 Visits</li>
+              <li className="text-primary-foreground/70">📞 Calls to Encourage</li>
+              <li className="text-primary-foreground/70">💰 Financial Assistance</li>
+              <li className="text-primary-foreground/70">🏥 Medical Assistance</li>
             </ul>
           </div>
 
@@ -74,19 +83,24 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                 <span className="text-primary-foreground/70">
-                  123 Charity Lane, Hope City, HC 12345
+                  Divine Love Christian Assembly Jos, Longwa Phase II Behind Millennium Hotel Jos
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-accent shrink-0" />
-                <a href="tel:+1234567890" className="text-primary-foreground/70 hover:text-accent transition-colors">
-                  +1 (234) 567-890
-                </a>
+                <div className="flex flex-col">
+                  <a href="tel:07032128927" className="text-primary-foreground/70 hover:text-accent transition-colors">
+                    07032128927
+                  </a>
+                  <a href="tel:08036638890" className="text-primary-foreground/70 hover:text-accent transition-colors">
+                    08036638890
+                  </a>
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-accent shrink-0" />
-                <a href="mailto:help@hopefund.org" className="text-primary-foreground/70 hover:text-accent transition-colors">
-                  help@hopefund.org
+                <a href="mailto:info@bfmaf.org" className="text-primary-foreground/70 hover:text-accent transition-colors">
+                  info@bfmaf.org
                 </a>
               </li>
             </ul>
@@ -95,10 +109,10 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-primary-foreground/50 text-sm">
-            © 2024 HopeFund. All rights reserved.
+            © {new Date().getFullYear()} Bride Family Medical Aid Foundation. All rights reserved.
           </p>
           <p className="text-primary-foreground/50 text-sm flex items-center gap-1">
-            Made with <Heart className="w-4 h-4 text-accent" /> for a better world
+            Made with <Heart className="w-4 h-4 text-accent" /> for the Bride of Christ
           </p>
         </div>
       </div>

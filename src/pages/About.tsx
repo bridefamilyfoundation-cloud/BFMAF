@@ -1,57 +1,53 @@
-import { Heart, Users, Target, Award, ArrowRight } from "lucide-react";
+import { Heart, Users, Target, Award, ArrowRight, BookOpen, Phone, HandHeart } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
 
-const teamMembers = [
-  {
-    name: "Sarah Johnson",
-    role: "Founder & CEO",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
-    bio: "Passionate about creating positive change in communities worldwide.",
-  },
-  {
-    name: "Michael Chen",
-    role: "Director of Operations",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop",
-    bio: "Expert in nonprofit management with 15 years of experience.",
-  },
-  {
-    name: "Emily Rodriguez",
-    role: "Community Outreach",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop",
-    bio: "Dedicated to connecting donors with causes that matter.",
-  },
-  {
-    name: "David Thompson",
-    role: "Finance Director",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop",
-    bio: "Ensuring transparency and accountability in all operations.",
-  },
-];
-
 const values = [
   {
     icon: Heart,
     title: "Compassion",
-    description: "We believe in the power of empathy to transform lives and communities.",
+    description: "Reaching out with love to believers facing overwhelming medical conditions.",
   },
   {
     icon: Users,
-    title: "Community",
-    description: "Together, we can achieve more than we ever could alone.",
+    title: "Family",
+    description: "The Bride of Christ is one family - when one member suffers, we all suffer together.",
   },
   {
     icon: Target,
-    title: "Impact",
-    description: "Every donation is directed to create measurable, lasting change.",
+    title: "Support",
+    description: "Providing prayers, visits, calls, and financial/medical assistance.",
   },
   {
     icon: Award,
-    title: "Integrity",
-    description: "Transparency and accountability guide everything we do.",
+    title: "Faith",
+    description: "Grounded in Biblical principles and the love of Christ for His Church.",
+  },
+];
+
+const howWeHelp = [
+  {
+    icon: BookOpen,
+    title: "Prayers",
+    description: "We intercede for our brothers and sisters in their time of need, lifting them up before the Lord.",
+  },
+  {
+    icon: Users,
+    title: "Visits",
+    description: "Where and when possible, we visit to show love, support, and the presence of the body of Christ.",
+  },
+  {
+    icon: Phone,
+    title: "Calls to Encourage",
+    description: "Reaching out to admonish and encourage during difficult times, reminding them they are not alone.",
+  },
+  {
+    icon: HandHeart,
+    title: "Financial & Medical Assistance",
+    description: "Providing tangible support for medical expenses when conditions are beyond the local church to handle.",
   },
 ];
 
@@ -63,16 +59,21 @@ const About = () => {
 
       <main className="relative z-10">
         {/* Hero Section */}
-        <section className="py-20 px-4">
+        <section className="py-20 px-4 pt-32">
           <div className="container mx-auto max-w-4xl text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              About <span className="text-gradient-primary">HopeFund</span>
+              About <span className="text-gradient-primary">BFMAF</span>
             </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-6 italic">
+              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
+            </p>
+            <p className="text-sm text-primary mb-8">— 1 Corinthians 12:26</p>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              HopeFund was founded with a simple mission: to connect generous donors with causes
-              that create real, lasting change in the world. Since 2015, we've helped channel
-              millions of dollars to communities in need, supporting education, healthcare,
-              environmental conservation, and humanitarian relief efforts.
+              Bride Family Medical Aid Foundation (BFMAF) is a platform borne out of compassion 
+              to reach out to the severely traumatized believers, brothers and sisters who are 
+              in despair due to prolonged or acute conditions that is overwhelming to the 
+              individual, family and local church — conditions beyond the local church to handle. 
+              Hence the need for the Bride of Christ as a Family to reach out for assistance!
             </p>
           </div>
         </section>
@@ -84,17 +85,18 @@ const About = () => {
               <div>
                 <h2 className="text-3xl font-bold text-foreground mb-6">Our Mission</h2>
                 <p className="text-muted-foreground mb-4">
-                  We strive to make charitable giving accessible, transparent, and impactful. Our
-                  platform connects donors with vetted organizations working on the front lines of
-                  social change.
+                  To be a bridge of compassion connecting the body of Christ worldwide, ensuring 
+                  that no believer faces overwhelming medical conditions alone. We believe that 
+                  as the Bride of Christ, we are called to bear one another's burdens.
                 </p>
                 <p className="text-muted-foreground mb-6">
-                  Every dollar donated through HopeFund is tracked and reported, ensuring that your
-                  generosity reaches those who need it most.
+                  Our mission is to identify, verify, and support believers who are facing 
+                  medical emergencies and prolonged conditions that exceed the capacity of 
+                  their local church to address.
                 </p>
                 <Button asChild className="bg-gradient-hero text-primary-foreground">
-                  <Link to="/causes">
-                    Explore Our Causes <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link to="/get-help">
+                    Request Assistance <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -105,16 +107,40 @@ const About = () => {
                   className="rounded-2xl shadow-card-hover"
                 />
                 <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-card">
-                  <div className="text-3xl font-bold text-primary">500K+</div>
-                  <div className="text-sm text-muted-foreground">Lives Impacted</div>
+                  <div className="text-3xl font-bold text-primary">BFMAF</div>
+                  <div className="text-sm text-muted-foreground">Bride Family Medical Aid</div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Values Section */}
+        {/* How We Help Section */}
         <section className="py-20 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold text-foreground text-center mb-4">How We Help</h2>
+            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+              Such assistance could come in the following ways:
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {howWeHelp.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
+                >
+                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="h-7 w-7 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Values Section */}
+        <section className="py-20 px-4 bg-secondary/30">
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-3xl font-bold text-foreground text-center mb-12">Our Values</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -134,29 +160,62 @@ const About = () => {
           </div>
         </section>
 
-        {/* Team Section */}
-        <section className="py-20 px-4 bg-secondary/30">
-          <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-foreground text-center mb-4">Meet Our Team</h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              Our dedicated team works tirelessly to ensure every donation makes a difference.
+        {/* Requirements Section */}
+        <section className="py-20 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold text-foreground text-center mb-4">What to Submit</h2>
+            <p className="text-muted-foreground text-center mb-12">
+              Individuals that need such assistance will submit the following:
             </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {teamMembers.map((member, index) => (
-                <div
-                  key={index}
-                  className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
-                >
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                  />
-                  <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
-                  <p className="text-sm text-primary mb-2">{member.role}</p>
-                  <p className="text-muted-foreground text-sm">{member.bio}</p>
+            <div className="space-y-6">
+              <div className="bg-card p-6 rounded-xl shadow-card flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                  1
                 </div>
-              ))}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Photographs</h3>
+                  <p className="text-muted-foreground">Clear photographs of the patient and their current condition</p>
+                </div>
+              </div>
+              <div className="bg-card p-6 rounded-xl shadow-card flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                  2
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Medical History</h3>
+                  <p className="text-muted-foreground">Complete medical history from onset to the current status of the condition</p>
+                </div>
+              </div>
+              <div className="bg-card p-6 rounded-xl shadow-card flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Financial Implication</h3>
+                  <p className="text-muted-foreground">Detailed breakdown of the financial implications of the medical management</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Location Section */}
+        <section className="py-16 px-4 bg-secondary/30">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-6">Our Location</h2>
+            <p className="text-lg text-muted-foreground mb-4">
+              Divine Love Christian Assembly Jos
+            </p>
+            <p className="text-muted-foreground mb-8">
+              Longwa Phase II Behind Millennium Hotel Jos
+            </p>
+            <div className="bg-card p-8 rounded-xl shadow-card inline-block">
+              <p className="text-foreground font-semibold mb-2">For more information or enquiry:</p>
+              <p className="text-primary text-lg">
+                <a href="tel:07032128927" className="hover:underline">07032128927</a>
+                {" or "}
+                <a href="tel:08036638890" className="hover:underline">08036638890</a>
+              </p>
             </div>
           </div>
         </section>
@@ -164,13 +223,17 @@ const About = () => {
         {/* CTA Section */}
         <section className="py-20 px-4">
           <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Make a Difference?</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-4">Need Assistance?</h2>
             <p className="text-muted-foreground mb-8">
-              Join thousands of donors who are changing lives every day.
+              If you or someone you know is facing an overwhelming medical condition, 
+              the Bride of Christ family is here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-gradient-hero text-primary-foreground">
-                <Link to="/donate">Start Donating</Link>
+                <Link to="/get-help">
+                  <HandHeart className="w-5 h-5" />
+                  Request Help
+                </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/contact">Contact Us</Link>

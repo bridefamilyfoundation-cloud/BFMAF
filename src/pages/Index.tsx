@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Heart, Users, Globe, TrendingUp, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, Heart, Users, Globe, TrendingUp, Shield, Sparkles, HandHeart, Phone, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FloatingBackground from "@/components/FloatingBackground";
@@ -22,7 +22,7 @@ interface Cause {
 interface SiteStats {
   totalRaised: number;
   totalDonors: number;
-  countriesReached: number;
+  casesHelped: number;
   fundsToProgram: number;
 }
 
@@ -31,8 +31,8 @@ const Index = () => {
   const [stats, setStats] = useState<SiteStats>({
     totalRaised: 0,
     totalDonors: 0,
-    countriesReached: 45,
-    fundsToProgram: 98,
+    casesHelped: 0,
+    fundsToProgram: 100,
   });
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +71,15 @@ const Index = () => {
         }));
       }
 
+      // Count total cases helped
+      const { count: casesCount } = await supabase
+        .from("causes")
+        .select("*", { count: "exact", head: true });
+
+      if (casesCount) {
+        setStats(prev => ({ ...prev, casesHelped: casesCount }));
+      }
+
       // Fetch site settings for additional stats
       const { data: settingsData } = await supabase
         .from("site_settings")
@@ -78,9 +87,6 @@ const Index = () => {
 
       if (settingsData) {
         settingsData.forEach(setting => {
-          if (setting.key === "countries_reached" && setting.value) {
-            setStats(prev => ({ ...prev, countriesReached: Number(setting.value) }));
-          }
           if (setting.key === "funds_to_program" && setting.value) {
             setStats(prev => ({ ...prev, fundsToProgram: Number(setting.value) }));
           }
@@ -105,30 +111,35 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8 animate-fade-in">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-primary">
-                Join {stats.totalDonors.toLocaleString()}+ donors making a difference
+                1 Corinthians 12:26
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-6 animate-slide-up">
-              Transform Lives Through{" "}
-              <span className="text-gradient-primary">Compassion</span>
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground mb-6 animate-slide-up">
+              Bride Family{" "}
+              <span className="text-gradient-primary">Medical Aid</span>{" "}
+              Foundation
             </h1>
 
-            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up delay-100">
-              Every contribution creates ripples of hope. Join our community of changemakers 
-              and help build a brighter future for those in need.
+            <p className="text-lg md:text-xl text-muted-foreground mb-6 max-w-3xl mx-auto animate-slide-up delay-100 italic">
+              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
+            </p>
+
+            <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up delay-100">
+              A platform borne out of compassion to reach out to severely traumatized believers 
+              in despair due to overwhelming medical conditions beyond the local church to handle.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up delay-200">
-              <Link to="/donate">
+              <Link to="/get-help">
                 <Button variant="hero" size="xl">
-                  Start Giving Today
-                  <ArrowRight className="w-5 h-5" />
+                  <HandHeart className="w-5 h-5" />
+                  Request Assistance
                 </Button>
               </Link>
               <Link to="/cases">
                 <Button variant="outline" size="xl">
-                  Explore Cases
+                  View Cases
                 </Button>
               </Link>
             </div>
@@ -142,7 +153,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCounter
               end={stats.totalRaised}
-              prefix="$"
+              prefix="₦"
               suffix="+"
               label="Funds Raised"
               icon={<TrendingUp className="w-6 h-6 text-primary-foreground" />}
@@ -150,21 +161,52 @@ const Index = () => {
             <StatCounter
               end={stats.totalDonors}
               suffix="+"
-              label="Donors Worldwide"
+              label="Donors"
               icon={<Users className="w-6 h-6 text-primary-foreground" />}
             />
             <StatCounter
-              end={stats.countriesReached}
+              end={stats.casesHelped}
               suffix="+"
-              label="Countries Reached"
-              icon={<Globe className="w-6 h-6 text-primary-foreground" />}
+              label="Cases Helped"
+              icon={<Heart className="w-6 h-6 text-primary-foreground" />}
             />
             <StatCounter
               end={stats.fundsToProgram}
               suffix="%"
-              label="Funds to Causes"
+              label="Funds to Cases"
               icon={<Shield className="w-6 h-6 text-primary-foreground" />}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* How We Help Section */}
+      <section className="py-20 px-4 relative z-10 bg-secondary/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+              How We <span className="text-gradient-primary">Help</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              The Bride of Christ as a Family reaches out for assistance in the following ways:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: BookOpen, title: "Prayers", description: "Interceding for our brothers and sisters in their time of need" },
+              { icon: Users, title: "Visits", description: "Where and when possible, we visit to show love and support" },
+              { icon: Phone, title: "Calls", description: "Reaching out to admonish and encourage during difficult times" },
+              { icon: Heart, title: "Financial & Medical Aid", description: "Providing tangible assistance for medical expenses" },
+            ].map((item, index) => (
+              <div key={index} className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-serif font-semibold text-foreground mb-2">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -174,11 +216,11 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Featured <span className="text-gradient-primary">Cases</span>
+              Current <span className="text-gradient-primary">Cases</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover ongoing campaigns that need your support. Every donation, no matter 
-              the size, brings us closer to our goals.
+              These are believers who need our support. Every donation, no matter 
+              the size, brings us closer to helping them.
             </p>
           </div>
 
@@ -227,34 +269,42 @@ const Index = () => {
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySC0ydi0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
             
             <div className="relative z-10">
-              <Heart className="w-16 h-16 text-primary-foreground/80 mx-auto mb-6 animate-pulse" />
+              <HandHeart className="w-16 h-16 text-primary-foreground/80 mx-auto mb-6 animate-pulse" />
               <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary-foreground mb-6">
-                Ready to Make a Difference?
+                Need Medical Assistance?
               </h2>
               <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto mb-10">
-                Your generosity can change lives. Start your journey of giving today and 
-                become part of our global community of hope.
+                If you or someone you know is facing overwhelming medical conditions, 
+                the Bride of Christ family is here to help. Submit your request today.
               </p>
-              <Link to="/donate">
-                <Button variant="accent" size="xl">
-                  <Heart className="w-5 h-5" />
-                  Donate Now
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/get-help">
+                  <Button variant="accent" size="xl">
+                    <HandHeart className="w-5 h-5" />
+                    Request Help
+                  </Button>
+                </Link>
+                <Link to="/donate">
+                  <Button variant="outline" size="xl" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <Heart className="w-5 h-5" />
+                    Donate Now
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* What We Need Section */}
       <section className="py-20 px-4 relative z-10">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              How It <span className="text-gradient-primary">Works</span>
+              What to <span className="text-gradient-primary">Submit</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Making an impact is simple. Follow these steps to start your giving journey.
+              Individuals that need assistance should submit the following:
             </p>
           </div>
 
@@ -262,18 +312,18 @@ const Index = () => {
             {[
               {
                 step: "01",
-                title: "Choose a Case",
-                description: "Browse through verified campaigns and find cases that resonate with your values.",
+                title: "Photographs",
+                description: "Clear photographs of the patient and their current condition.",
               },
               {
                 step: "02",
-                title: "Make a Donation",
-                description: "Securely contribute any amount. Every dollar goes directly to making an impact.",
+                title: "Medical History",
+                description: "Complete medical history from onset to the current status of the condition.",
               },
               {
                 step: "03",
-                title: "Track Your Impact",
-                description: "Receive updates on how your donation is changing lives and communities.",
+                title: "Financial Implication",
+                description: "Detailed breakdown of the financial implications of the medical management.",
               },
             ].map((item, index) => (
               <div
@@ -298,6 +348,15 @@ const Index = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link to="/get-help">
+              <Button variant="hero" size="lg">
+                <HandHeart className="w-5 h-5" />
+                Submit Your Request
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

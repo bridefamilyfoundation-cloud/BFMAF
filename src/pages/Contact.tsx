@@ -14,22 +14,22 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Address",
-    details: ["123 Hope Street", "New York, NY 10001"],
+    details: ["Divine Love Christian Assembly Jos", "Longwa Phase II Behind Millennium Hotel Jos"],
   },
   {
     icon: Phone,
     title: "Phone",
-    details: ["+1 (555) 123-4567", "+1 (555) 987-6543"],
+    details: ["07032128927", "08036638890"],
   },
   {
     icon: Mail,
     title: "Email",
-    details: ["info@hopefund.org", "support@hopefund.org"],
+    details: ["info@bfmaf.org"],
   },
   {
     icon: Clock,
     title: "Hours",
-    details: ["Mon - Fri: 9am - 6pm", "Sat: 10am - 4pm"],
+    details: ["Mon - Fri: 9am - 5pm", "Sat: 10am - 2pm"],
   },
 ];
 
@@ -91,13 +91,14 @@ const Contact = () => {
 
       <main className="relative z-10">
         {/* Hero Section */}
-        <section className="py-20 px-4">
+        <section className="py-20 px-4 pt-32">
           <div className="container mx-auto max-w-4xl text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Get in <span className="text-gradient-primary">Touch</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Have questions about our causes or want to get involved? We'd love to hear from you.
+              Have questions about our foundation or want to get involved? We'd love to hear from you.
+              For more information or enquiry, please call us directly.
             </p>
           </div>
         </section>
@@ -121,7 +122,17 @@ const Contact = () => {
                       <h3 className="font-semibold text-foreground mb-2">{info.title}</h3>
                       {info.details.map((detail, i) => (
                         <p key={i} className="text-muted-foreground text-sm">
-                          {detail}
+                          {info.title === "Phone" ? (
+                            <a href={`tel:${detail}`} className="hover:text-primary transition-colors">
+                              {detail}
+                            </a>
+                          ) : info.title === "Email" ? (
+                            <a href={`mailto:${detail}`} className="hover:text-primary transition-colors">
+                              {detail}
+                            </a>
+                          ) : (
+                            detail
+                          )}
                         </p>
                       ))}
                     </div>
@@ -132,7 +143,8 @@ const Contact = () => {
                 <div className="mt-8 bg-secondary/50 rounded-xl h-64 flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">Interactive Map</p>
+                    <p className="text-muted-foreground">Divine Love Christian Assembly Jos</p>
+                    <p className="text-muted-foreground text-sm">Longwa Phase II</p>
                   </div>
                 </div>
               </div>
@@ -147,7 +159,7 @@ const Contact = () => {
                       <Input
                         id="name"
                         name="name"
-                        placeholder="John Doe"
+                        placeholder="Your full name"
                         value={formData.name}
                         onChange={handleChange}
                         required
@@ -159,7 +171,7 @@ const Contact = () => {
                         id="email"
                         name="email"
                         type="email"
-                        placeholder="john@example.com"
+                        placeholder="your@email.com"
                         value={formData.email}
                         onChange={handleChange}
                         required
@@ -220,20 +232,20 @@ const Contact = () => {
             <div className="space-y-4">
               {[
                 {
-                  q: "How can I volunteer with HopeFund?",
-                  a: "We offer various volunteer opportunities throughout the year. Contact us to learn about current openings.",
+                  q: "How can I request medical assistance?",
+                  a: "You can submit your request through our 'Get Help' page. You'll need to provide photographs, your medical history from onset to current status, and the financial implications of the medical management.",
                 },
                 {
-                  q: "Is my donation tax-deductible?",
-                  a: "Yes, HopeFund is a registered 501(c)(3) nonprofit organization. All donations are tax-deductible to the fullest extent of the law.",
+                  q: "Who is eligible for assistance?",
+                  a: "We reach out to believers, brothers and sisters who are in despair due to prolonged or acute medical conditions that are overwhelming to the individual, family, and local church.",
                 },
                 {
-                  q: "How do you ensure donations reach those in need?",
-                  a: "We work with vetted partner organizations and conduct regular audits to ensure transparency and accountability.",
+                  q: "How do you verify cases?",
+                  a: "All submitted cases are reviewed by our admin team. We verify the medical documentation and may contact the local church or medical providers for confirmation.",
                 },
                 {
-                  q: "Can I set up recurring donations?",
-                  a: "Yes! You can set up monthly or annual recurring donations through our donation page.",
+                  q: "How can I donate to help someone?",
+                  a: "You can donate through our Donate page. You can choose to give to a specific case or to the general fund which helps multiple cases.",
                 },
               ].map((faq, index) => (
                 <div key={index} className="bg-card p-6 rounded-xl shadow-card">

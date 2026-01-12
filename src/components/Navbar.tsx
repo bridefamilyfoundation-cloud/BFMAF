@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, Menu, X, User, LayoutDashboard } from "lucide-react";
+import { Heart, Menu, X, User, LayoutDashboard, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +24,8 @@ const Navbar = () => {
             <div className="w-10 h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-md group-hover:shadow-glow transition-shadow duration-300">
               <Heart className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-serif font-bold text-foreground">
-              Hope<span className="text-primary">Fund</span>
+            <span className="text-lg font-serif font-bold text-foreground">
+              <span className="text-primary">BFMAF</span>
             </span>
           </Link>
 
@@ -62,10 +62,10 @@ const Navbar = () => {
                 <LayoutDashboard className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/donate">
+            <Link to="/get-help">
               <Button variant="accent" size="default">
-                <Heart className="w-4 h-4" />
-                Donate Now
+                <HandHeart className="w-4 h-4" />
+                Get Help
               </Button>
             </Link>
           </div>
@@ -116,10 +116,10 @@ const Navbar = () => {
                 </Button>
               </Link>
             </div>
-            <Link to="/donate" onClick={() => setIsOpen(false)}>
+            <Link to="/get-help" onClick={() => setIsOpen(false)}>
               <Button variant="accent" className="w-full">
-                <Heart className="w-4 h-4" />
-                Donate Now
+                <HandHeart className="w-4 h-4" />
+                Get Help
               </Button>
             </Link>
           </div>
