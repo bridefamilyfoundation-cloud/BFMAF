@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Heart, User, Filter, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,29 +12,34 @@ import { supabase } from "@/integrations/supabase/client";
 interface ActivityItem {
   id: string;
   action: string;
-  details: unknown;
+  details: Record<string, unknown> | null;
   created_at: string;
   user_id: string | null;
 }
 
 const Activity = () => {
+  const navigate = useNavigate();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
 
   useEffect(() => {
-    fetchActivities();
+    checkAuthAndFetchActivities();
   }, []);
+
+  const checkAuthAndFetchActivities = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    await fetchActivities();
+  };
 
   const fetchActivities = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
-        setLoading(false);
-        return;
-      }
-
       const { data, error } = await supabase
         .from("activity_log")
         .select("*")
@@ -41,7 +47,7 @@ const Activity = () => {
         .limit(50);
 
       if (error) throw error;
-      setActivities(data || []);
+      setActivities((data || []) as ActivityItem[]);
     } catch (error) {
       console.error("Error fetching activities:", error);
     } finally {
@@ -90,41 +96,6 @@ const Activity = () => {
       filterType === "all" || activity.action.toLowerCase() === filterType;
     return matchesSearch && matchesFilter;
   });
-
-  // Mock data for demo
-  const mockActivities = [
-    {
-      id: "1",
-      action: "donation",
-      details: { amount: 100, cause: "Education Fund" },
-      created_at: new Date().toISOString(),
-      user_id: "user1",
-    },
-    {
-      id: "2",
-      action: "profile_update",
-      details: { field: "avatar" },
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      user_id: "user1",
-    },
-    {
-      id: "3",
-      action: "donation",
-      details: { amount: 50, cause: "Healthcare Initiative" },
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-      user_id: "user1",
-    },
-    {
-      id: "4",
-      action: "login",
-      details: null,
-      created_at: new Date(Date.now() - 259200000).toISOString(),
-      user_id: "user1",
-    },
-  ];
-
-  const displayActivities =
-    activities.length > 0 ? filteredActivities : mockActivities;
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,58 +151,57 @@ const Activity = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {displayActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow flex items-start gap-4"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                      {getActionIcon(activity.action)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={getActionColor(activity.action)}>
-                          {activity.action.replace("_", " ")}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(activity.created_at)}
-                        </span>
+                {filteredActivities.length > 0 ? (
+                  filteredActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow flex items-start gap-4"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                        {getActionIcon(activity.action)}
                       </div>
-                      {activity.details && typeof activity.details === "object" && (
-                        <p className="text-foreground">
-                          {activity.action === "donation" ? (
-                            <>
-                              Donated{" "}
-                              <span className="font-semibold text-primary">
-                                ${String((activity.details as Record<string, unknown>).amount)}
-                              </span>{" "}
-                              to{" "}
-                              <span className="font-medium">
-                                {(activity.details as Record<string, unknown>).cause as string}
-                              </span>
-                            </>
-                          ) : activity.action === "profile_update" ? (
-                            <>
-                              Updated{" "}
-                              <span className="font-medium">
-                                {(activity.details as Record<string, unknown>).field as string}
-                              </span>
-                            </>
-                          ) : (
-                            JSON.stringify(activity.details)
-                          )}
-                        </p>
-                      )}
-                      {!activity.details && (
-                        <p className="text-muted-foreground">
-                          Activity recorded
-                        </p>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className={getActionColor(activity.action)}>
+                            {activity.action.replace("_", " ")}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(activity.created_at)}
+                          </span>
+                        </div>
+                        {activity.details && typeof activity.details === "object" && (
+                          <p className="text-foreground">
+                            {activity.action === "donation" ? (
+                              <>
+                                Donated{" "}
+                                <span className="font-semibold text-primary">
+                                  ${String(activity.details.amount)}
+                                </span>
+                                {activity.details.cause_id && (
+                                  <> to a cause</>
+                                )}
+                              </>
+                            ) : activity.action === "profile_update" ? (
+                              <>
+                                Updated{" "}
+                                <span className="font-medium">
+                                  {String(activity.details.field || "profile")}
+                                </span>
+                              </>
+                            ) : (
+                              JSON.stringify(activity.details)
+                            )}
+                          </p>
+                        )}
+                        {!activity.details && (
+                          <p className="text-muted-foreground">
+                            Activity recorded
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-
-                {displayActivities.length === 0 && (
+                  ))
+                ) : (
                   <div className="text-center py-12 bg-card rounded-xl">
                     <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-foreground mb-2">

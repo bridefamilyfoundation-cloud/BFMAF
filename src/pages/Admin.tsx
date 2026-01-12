@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
   Heart,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   MoreVertical,
   Plus,
   Search,
   Filter,
-  Calendar,
   ArrowUpRight,
   ArrowDownRight,
   Settings,
@@ -29,60 +28,227 @@ import {
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const statsCards = [
-  {
-    title: "Total Donations",
-    value: "$2,548,320",
-    change: "+12.5%",
-    trend: "up",
-    icon: DollarSign,
-    color: "primary",
-  },
-  {
-    title: "Active Donors",
-    value: "15,234",
-    change: "+8.2%",
-    trend: "up",
-    icon: Users,
-    color: "accent",
-  },
-  {
-    title: "Active Campaigns",
-    value: "48",
-    change: "+3",
-    trend: "up",
-    icon: Heart,
-    color: "success",
-  },
-  {
-    title: "Avg. Donation",
-    value: "$167",
-    change: "-2.1%",
-    trend: "down",
-    icon: TrendingUp,
-    color: "warm",
-  },
-];
+interface StatsCard {
+  title: string;
+  value: string;
+  change: string;
+  trend: "up" | "down";
+  icon: React.ElementType;
+  color: string;
+}
 
-const recentDonations = [
-  { id: 1, donor: "Sarah Johnson", email: "sarah@example.com", amount: 500, campaign: "Education Fund", date: "2 min ago", avatar: "SJ" },
-  { id: 2, donor: "Michael Chen", email: "michael@example.com", amount: 250, campaign: "Clean Water", date: "15 min ago", avatar: "MC" },
-  { id: 3, donor: "Emily Davis", email: "emily@example.com", amount: 100, campaign: "Emergency Relief", date: "1 hour ago", avatar: "ED" },
-  { id: 4, donor: "James Wilson", email: "james@example.com", amount: 1000, campaign: "Healthcare Access", date: "2 hours ago", avatar: "JW" },
-  { id: 5, donor: "Anna Brown", email: "anna@example.com", amount: 75, campaign: "Education Fund", date: "3 hours ago", avatar: "AB" },
-];
+interface RecentDonation {
+  id: string;
+  donor: string;
+  email: string;
+  amount: number;
+  campaign: string;
+  date: string;
+  avatar: string;
+}
 
-const campaigns = [
-  { id: 1, name: "Education for Rural Children", raised: 45000, goal: 75000, donors: 342, status: "active" },
-  { id: 2, name: "Clean Water Initiative", raised: 28000, goal: 50000, donors: 187, status: "active" },
-  { id: 3, name: "Emergency Relief Fund", raised: 62000, goal: 100000, donors: 512, status: "active" },
-  { id: 4, name: "Healthcare Access Program", raised: 35000, goal: 35000, donors: 298, status: "completed" },
-];
+interface Campaign {
+  id: string;
+  name: string;
+  raised: number;
+  goal: number;
+  donors: number;
+  status: string;
+}
 
 const Admin = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [statsCards, setStatsCards] = useState<StatsCard[]>([]);
+  const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    checkAdminAndFetchData();
+  }, []);
+
+  const checkAdminAndFetchData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    // Check if user is admin
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have admin privileges.",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
+
+    setIsAdmin(true);
+    await fetchDashboardData();
+    setLoading(false);
+  };
+
+  const fetchDashboardData = async () => {
+    // Fetch donations for stats
+    const { data: donations } = await supabase
+      .from("donations")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Fetch causes/campaigns
+    const { data: causes } = await supabase
+      .from("causes")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Calculate stats
+    const totalDonations = donations?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+    const uniqueDonors = new Set(donations?.map(d => d.user_id || d.donor_email).filter(Boolean)).size;
+    const activeCampaigns = causes?.filter(c => c.is_active).length || 0;
+    const avgDonation = donations?.length ? Math.round(totalDonations / donations.length) : 0;
+
+    setStatsCards([
+      {
+        title: "Total Donations",
+        value: `$${totalDonations.toLocaleString()}`,
+        change: "+12.5%",
+        trend: "up",
+        icon: DollarSign,
+        color: "primary",
+      },
+      {
+        title: "Active Donors",
+        value: uniqueDonors.toLocaleString(),
+        change: "+8.2%",
+        trend: "up",
+        icon: Users,
+        color: "accent",
+      },
+      {
+        title: "Active Campaigns",
+        value: activeCampaigns.toString(),
+        change: `+${activeCampaigns}`,
+        trend: "up",
+        icon: Heart,
+        color: "success",
+      },
+      {
+        title: "Avg. Donation",
+        value: `$${avgDonation}`,
+        change: "-2.1%",
+        trend: "down",
+        icon: TrendingUp,
+        color: "warm",
+      },
+    ]);
+
+    // Format recent donations
+    if (donations) {
+      const formattedDonations = await Promise.all(
+        donations.slice(0, 10).map(async (donation) => {
+          let donorName = "Anonymous";
+          let donorEmail = donation.donor_email || "";
+          
+          if (donation.user_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("first_name, last_name, email")
+              .eq("user_id", donation.user_id)
+              .maybeSingle();
+            
+            if (profile) {
+              donorName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User";
+              donorEmail = profile.email || "";
+            }
+          } else if (donation.donor_name) {
+            donorName = donation.donor_name;
+          }
+
+          let campaignName = "General Donation";
+          if (donation.cause_id) {
+            const cause = causes?.find(c => c.id === donation.cause_id);
+            if (cause) campaignName = cause.title;
+          }
+
+          const date = new Date(donation.created_at);
+          const now = new Date();
+          const diffMs = now.getTime() - date.getTime();
+          const diffMins = Math.round(diffMs / 60000);
+          const diffHours = Math.round(diffMs / 3600000);
+          let dateStr = `${diffMins} min ago`;
+          if (diffMins > 60) dateStr = `${diffHours} hours ago`;
+          if (diffHours > 24) dateStr = date.toLocaleDateString();
+
+          return {
+            id: donation.id,
+            donor: donorName,
+            email: donorEmail,
+            amount: Number(donation.amount),
+            campaign: campaignName,
+            date: dateStr,
+            avatar: donorName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase(),
+          };
+        })
+      );
+      setRecentDonations(formattedDonations);
+    }
+
+    // Format campaigns
+    if (causes) {
+      const formattedCampaigns = await Promise.all(
+        causes.map(async (cause) => {
+          const { count } = await supabase
+            .from("donations")
+            .select("*", { count: "exact", head: true })
+            .eq("cause_id", cause.id);
+
+          return {
+            id: cause.id,
+            name: cause.title,
+            raised: Number(cause.raised_amount),
+            goal: Number(cause.goal_amount),
+            donors: count || 0,
+            status: cause.is_active ? "active" : "completed",
+          };
+        })
+      );
+      setCampaigns(formattedCampaigns);
+    }
+  };
+
+  const filteredDonations = recentDonations.filter(
+    (d) =>
+      d.donor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.campaign.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background relative flex items-center justify-center">
+        <FloatingBackground />
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -208,7 +374,12 @@ const Admin = () => {
                     <div className="flex items-center gap-2">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input placeholder="Search..." className="pl-9 w-48" />
+                        <Input
+                          placeholder="Search..."
+                          className="pl-9 w-48"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                       </div>
                       <Button variant="outline" size="icon">
                         <Filter className="w-4 h-4" />
@@ -228,38 +399,46 @@ const Admin = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {recentDonations.map((donation) => (
-                          <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
-                            <td className="py-4 px-2">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-medium text-sm">
-                                  {donation.avatar}
+                        {filteredDonations.length > 0 ? (
+                          filteredDonations.map((donation) => (
+                            <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
+                              <td className="py-4 px-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-medium text-sm">
+                                    {donation.avatar}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-foreground">{donation.donor}</p>
+                                    <p className="text-sm text-muted-foreground">{donation.email}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-medium text-foreground">{donation.donor}</p>
-                                  <p className="text-sm text-muted-foreground">{donation.email}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-2 text-sm text-muted-foreground">{donation.campaign}</td>
-                            <td className="py-4 px-2 font-semibold text-primary">${donation.amount}</td>
-                            <td className="py-4 px-2 text-sm text-muted-foreground">{donation.date}</td>
-                            <td className="py-4 px-2">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreVertical className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>View Details</DropdownMenuItem>
-                                  <DropdownMenuItem>Send Receipt</DropdownMenuItem>
-                                  <DropdownMenuItem>Contact Donor</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              </td>
+                              <td className="py-4 px-2 text-sm text-muted-foreground">{donation.campaign}</td>
+                              <td className="py-4 px-2 font-semibold text-primary">${donation.amount}</td>
+                              <td className="py-4 px-2 text-sm text-muted-foreground">{donation.date}</td>
+                              <td className="py-4 px-2">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                                    <DropdownMenuItem>Send Receipt</DropdownMenuItem>
+                                    <DropdownMenuItem>Contact Donor</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                              No donations found.
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -276,34 +455,38 @@ const Admin = () => {
                   </div>
 
                   <div className="space-y-6">
-                    {campaigns.map((campaign) => {
-                      const progress = (campaign.raised / campaign.goal) * 100;
-                      return (
-                        <div key={campaign.id} className="space-y-2">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-medium text-foreground text-sm line-clamp-1">{campaign.name}</p>
-                              <p className="text-xs text-muted-foreground">{campaign.donors} donors</p>
+                    {campaigns.length > 0 ? (
+                      campaigns.map((campaign) => {
+                        const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
+                        return (
+                          <div key={campaign.id} className="space-y-2">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium text-foreground text-sm line-clamp-1">{campaign.name}</p>
+                                <p className="text-xs text-muted-foreground">{campaign.donors} donors</p>
+                              </div>
+                              <span
+                                className={cn(
+                                  "px-2 py-0.5 rounded-full text-xs font-medium",
+                                  campaign.status === "active"
+                                    ? "bg-success/10 text-success"
+                                    : "bg-muted text-muted-foreground"
+                                )}
+                              >
+                                {campaign.status}
+                              </span>
                             </div>
-                            <span
-                              className={cn(
-                                "px-2 py-0.5 rounded-full text-xs font-medium",
-                                campaign.status === "active"
-                                  ? "bg-success/10 text-success"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {campaign.status}
-                            </span>
+                            <Progress value={progress} className="h-2" />
+                            <div className="flex justify-between text-xs">
+                              <span className="text-primary font-medium">${campaign.raised.toLocaleString()}</span>
+                              <span className="text-muted-foreground">${campaign.goal.toLocaleString()}</span>
+                            </div>
                           </div>
-                          <Progress value={progress} className="h-2" />
-                          <div className="flex justify-between text-xs">
-                            <span className="text-primary font-medium">${campaign.raised.toLocaleString()}</span>
-                            <span className="text-muted-foreground">${campaign.goal.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">No campaigns yet.</p>
+                    )}
                   </div>
                 </div>
               </div>

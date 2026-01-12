@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { ArrowRight, Heart, Users, Globe, TrendingUp, Shield, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,38 +7,92 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatCounter from "@/components/StatCounter";
 import CaseCard from "@/components/CaseCard";
+import { supabase } from "@/integrations/supabase/client";
 
-const causes = [
-  {
-    id: "1",
-    title: "Education for Rural Children",
-    description: "Help provide quality education and learning materials to underprivileged children in rural communities.",
-    image: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=800&auto=format&fit=crop",
-    raised: 45000,
-    goal: 75000,
-    category: "Education",
-  },
-  {
-    id: "2",
-    title: "Clean Water Initiative",
-    description: "Bring clean and safe drinking water to communities facing severe water scarcity.",
-    image: "https://images.unsplash.com/photo-1541544537156-7627a7a4aa1c?w=800&auto=format&fit=crop",
-    raised: 28000,
-    goal: 50000,
-    category: "Healthcare",
-  },
-  {
-    id: "3",
-    title: "Emergency Relief Fund",
-    description: "Support families affected by natural disasters with immediate aid and recovery assistance.",
-    image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&auto=format&fit=crop",
-    raised: 62000,
-    goal: 100000,
-    category: "Emergency",
-  },
-];
+interface Cause {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  raised_amount: number;
+  goal_amount: number;
+  category: string;
+}
+
+interface SiteStats {
+  totalRaised: number;
+  totalDonors: number;
+  countriesReached: number;
+  fundsToProgram: number;
+}
 
 const Index = () => {
+  const [causes, setCauses] = useState<Cause[]>([]);
+  const [stats, setStats] = useState<SiteStats>({
+    totalRaised: 0,
+    totalDonors: 0,
+    countriesReached: 45,
+    fundsToProgram: 98,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      // Fetch featured causes (limit to 3)
+      const { data: causesData, error: causesError } = await supabase
+        .from("causes")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (causesError) throw causesError;
+      setCauses(causesData || []);
+
+      // Fetch total raised and donor count from donations
+      const { data: donationsData, error: donationsError } = await supabase
+        .from("donations")
+        .select("amount, user_id, donor_email");
+
+      if (!donationsError && donationsData) {
+        const totalRaised = donationsData.reduce((sum, d) => sum + Number(d.amount), 0);
+        // Count unique donors (by user_id or donor_email)
+        const uniqueDonors = new Set(
+          donationsData.map(d => d.user_id || d.donor_email).filter(Boolean)
+        );
+        setStats(prev => ({
+          ...prev,
+          totalRaised,
+          totalDonors: uniqueDonors.size,
+        }));
+      }
+
+      // Fetch site settings for additional stats
+      const { data: settingsData } = await supabase
+        .from("site_settings")
+        .select("key, value");
+
+      if (settingsData) {
+        settingsData.forEach(setting => {
+          if (setting.key === "countries_reached" && setting.value) {
+            setStats(prev => ({ ...prev, countriesReached: Number(setting.value) }));
+          }
+          if (setting.key === "funds_to_program" && setting.value) {
+            setStats(prev => ({ ...prev, fundsToProgram: Number(setting.value) }));
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
       <FloatingBackground />
@@ -50,7 +105,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8 animate-fade-in">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-primary">
-                Join 50,000+ donors making a difference
+                Join {stats.totalDonors.toLocaleString()}+ donors making a difference
               </span>
             </div>
 
@@ -86,26 +141,26 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCounter
-              end={2500000}
+              end={stats.totalRaised}
               prefix="$"
               suffix="+"
               label="Funds Raised"
               icon={<TrendingUp className="w-6 h-6 text-primary-foreground" />}
             />
             <StatCounter
-              end={15000}
+              end={stats.totalDonors}
               suffix="+"
               label="Donors Worldwide"
               icon={<Users className="w-6 h-6 text-primary-foreground" />}
             />
             <StatCounter
-              end={45}
+              end={stats.countriesReached}
               suffix="+"
               label="Countries Reached"
               icon={<Globe className="w-6 h-6 text-primary-foreground" />}
             />
             <StatCounter
-              end={98}
+              end={stats.fundsToProgram}
               suffix="%"
               label="Funds to Causes"
               icon={<Shield className="w-6 h-6 text-primary-foreground" />}
@@ -127,11 +182,32 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {causes.map((cause) => (
-              <CaseCard key={cause.id} {...cause} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading cases...</p>
+            </div>
+          ) : causes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {causes.map((cause) => (
+                <CaseCard
+                  key={cause.id}
+                  id={cause.id}
+                  title={cause.title}
+                  description={cause.description || ""}
+                  image={cause.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop"}
+                  raised={Number(cause.raised_amount)}
+                  goal={Number(cause.goal_amount)}
+                  category={cause.category}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-card rounded-2xl">
+              <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No active cases at the moment.</p>
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link to="/cases">

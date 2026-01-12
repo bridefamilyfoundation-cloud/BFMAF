@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { User, Mail, Phone, MapPin, Camera, Heart, Calendar, TrendingUp, Edit2, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Mail, Phone, MapPin, Camera, Heart, Calendar, TrendingUp, Edit2, Save, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,25 +8,195 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const donationHistory = [
-  { id: 1, cause: "Education for Rural Children", amount: 100, date: "2024-01-15", status: "completed" },
-  { id: 2, cause: "Clean Water Initiative", amount: 50, date: "2024-01-10", status: "completed" },
-  { id: 3, cause: "Emergency Relief Fund", amount: 250, date: "2023-12-28", status: "completed" },
-  { id: 4, cause: "Healthcare Access Program", amount: 75, date: "2023-12-15", status: "completed" },
-];
+interface Profile {
+  id: string;
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  created_at: string;
+}
+
+interface Donation {
+  id: string;
+  amount: number;
+  created_at: string;
+  status: string;
+  cause_title: string;
+}
 
 const Profile = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (234) 567-890",
-    address: "123 Charity Lane, Hope City, HC 12345",
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [donationHistory, setDonationHistory] = useState<Donation[]>([]);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
   });
 
+  useEffect(() => {
+    checkAuthAndFetchData();
+  }, []);
+
+  const checkAuthAndFetchData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+    await fetchProfile(session.user.id);
+    await fetchDonations(session.user.id);
+    setLoading(false);
+  };
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return;
+    }
+
+    if (data) {
+      setProfile(data);
+      setFormData({
+        firstName: data.first_name || "",
+        lastName: data.last_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        address: data.address || "",
+      });
+    }
+  };
+
+  const fetchDonations = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("donations")
+      .select(`
+        id,
+        amount,
+        created_at,
+        status,
+        cause_id
+      `)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching donations:", error);
+      return;
+    }
+
+    if (data) {
+      // Fetch cause titles for each donation
+      const donationsWithCauses = await Promise.all(
+        data.map(async (donation) => {
+          let causeTitle = "General Donation";
+          if (donation.cause_id) {
+            const { data: causeData } = await supabase
+              .from("causes")
+              .select("title")
+              .eq("id", donation.cause_id)
+              .maybeSingle();
+            if (causeData) {
+              causeTitle = causeData.title;
+            }
+          }
+          return {
+            id: donation.id,
+            amount: Number(donation.amount),
+            created_at: donation.created_at,
+            status: donation.status,
+            cause_title: causeTitle,
+          };
+        })
+      );
+      setDonationHistory(donationsWithCauses);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profile) return;
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+      })
+      .eq("id", profile.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Profile Updated",
+        description: "Your changes have been saved.",
+      });
+      setIsEditing(false);
+      setProfile({
+        ...profile,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+      });
+    }
+    setSaving(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   const totalDonated = donationHistory.reduce((sum, d) => sum + d.amount, 0);
+  const causesSupported = new Set(donationHistory.map(d => d.cause_title)).size;
+  const thisMonthDonations = donationHistory
+    .filter(d => new Date(d.created_at).getMonth() === new Date().getMonth())
+    .reduce((sum, d) => sum + d.amount, 0);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background relative flex items-center justify-center">
+        <FloatingBackground />
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -50,9 +221,9 @@ const Profile = () => {
 
               <div className="flex-1 text-center md:text-left">
                 <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
-                  {profile.firstName} {profile.lastName}
+                  {formData.firstName} {formData.lastName}
                 </h1>
-                <p className="text-muted-foreground mb-4">{profile.email}</p>
+                <p className="text-muted-foreground mb-4">{formData.email}</p>
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
                     <Heart className="w-4 h-4 text-primary" />
@@ -63,28 +234,34 @@ const Profile = () => {
                   <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full">
                     <Calendar className="w-4 h-4 text-accent" />
                     <span className="text-sm font-medium text-accent">
-                      Member since 2023
+                      Member since {profile ? new Date(profile.created_at).getFullYear() : ""}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <Button
-                variant={isEditing ? "hero" : "outline"}
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                  </>
-                ) : (
-                  <>
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant={isEditing ? "hero" : "outline"}
+                  onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                  disabled={saving}
+                >
+                  {isEditing ? (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {saving ? "Saving..." : "Save Changes"}
+                    </>
+                  ) : (
+                    <>
+                      <Edit2 className="w-4 h-4" />
+                      Edit Profile
+                    </>
+                  )}
+                </Button>
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -119,7 +296,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Causes Supported</p>
-                      <p className="text-2xl font-serif font-bold text-foreground">4</p>
+                      <p className="text-2xl font-serif font-bold text-foreground">{causesSupported}</p>
                     </div>
                   </div>
                 </div>
@@ -130,7 +307,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">This Month</p>
-                      <p className="text-2xl font-serif font-bold text-foreground">$150</p>
+                      <p className="text-2xl font-serif font-bold text-foreground">${thisMonthDonations.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -141,22 +318,26 @@ const Profile = () => {
                 <h3 className="text-xl font-serif font-semibold text-foreground mb-6">
                   Recent Donations
                 </h3>
-                <div className="space-y-4">
-                  {donationHistory.slice(0, 3).map((donation) => (
-                    <div
-                      key={donation.id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-secondary/50"
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">{donation.cause}</p>
-                        <p className="text-sm text-muted-foreground">{donation.date}</p>
+                {donationHistory.length > 0 ? (
+                  <div className="space-y-4">
+                    {donationHistory.slice(0, 3).map((donation) => (
+                      <div
+                        key={donation.id}
+                        className="flex items-center justify-between p-4 rounded-xl bg-secondary/50"
+                      >
+                        <div>
+                          <p className="font-medium text-foreground">{donation.cause_title}</p>
+                          <p className="text-sm text-muted-foreground">{formatDate(donation.created_at)}</p>
+                        </div>
+                        <span className="font-semibold text-primary">
+                          ${donation.amount.toLocaleString()}
+                        </span>
                       </div>
-                      <span className="font-semibold text-primary">
-                        ${donation.amount}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No donations yet.</p>
+                )}
               </div>
             </TabsContent>
 
@@ -165,32 +346,36 @@ const Profile = () => {
                 <h3 className="text-xl font-serif font-semibold text-foreground mb-6">
                   All Donations
                 </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Cause</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {donationHistory.map((donation) => (
-                        <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
-                          <td className="py-4 px-4 text-foreground">{donation.cause}</td>
-                          <td className="py-4 px-4 font-semibold text-primary">${donation.amount}</td>
-                          <td className="py-4 px-4 text-muted-foreground">{donation.date}</td>
-                          <td className="py-4 px-4">
-                            <span className="px-3 py-1 bg-success/10 text-success text-sm rounded-full capitalize">
-                              {donation.status}
-                            </span>
-                          </td>
+                {donationHistory.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Cause</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                          <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {donationHistory.map((donation) => (
+                          <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
+                            <td className="py-4 px-4 text-foreground">{donation.cause_title}</td>
+                            <td className="py-4 px-4 font-semibold text-primary">${donation.amount.toLocaleString()}</td>
+                            <td className="py-4 px-4 text-muted-foreground">{formatDate(donation.created_at)}</td>
+                            <td className="py-4 px-4">
+                              <span className="px-3 py-1 bg-success/10 text-success text-sm rounded-full capitalize">
+                                {donation.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No donations yet.</p>
+                )}
               </div>
             </TabsContent>
 
@@ -204,8 +389,8 @@ const Profile = () => {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
-                      value={profile.firstName}
-                      onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       disabled={!isEditing}
                       className="mt-2"
                     />
@@ -214,8 +399,8 @@ const Profile = () => {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
-                      value={profile.lastName}
-                      onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       disabled={!isEditing}
                       className="mt-2"
                     />
@@ -226,8 +411,8 @@ const Profile = () => {
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="email"
-                        value={profile.email}
-                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         disabled={!isEditing}
                         className="pl-10"
                       />
@@ -239,8 +424,8 @@ const Profile = () => {
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="phone"
-                        value={profile.phone}
-                        onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={!isEditing}
                         className="pl-10"
                       />
@@ -252,8 +437,8 @@ const Profile = () => {
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="address"
-                        value={profile.address}
-                        onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                         disabled={!isEditing}
                         className="pl-10"
                       />
