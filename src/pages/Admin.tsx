@@ -64,6 +64,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import NewCaseDialog from "@/components/admin/NewCaseDialog";
+import { sendApprovalEmail } from "@/lib/email";
 
 interface StatsCard {
   title: string;
@@ -248,6 +249,13 @@ const Admin = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Get the user's profile for email notification
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("email, first_name, last_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -266,9 +274,15 @@ const Admin = () => {
         details: { approved_user_id: userId },
       });
 
+      // Send approval email notification
+      if (profileData?.email) {
+        const fullName = `${profileData.first_name || ""} ${profileData.last_name || ""}`.trim() || "Member";
+        sendApprovalEmail(profileData.email, fullName).catch(console.error);
+      }
+
       toast({
         title: "User Approved",
-        description: "The member has been approved successfully.",
+        description: "The member has been approved and notified via email.",
       });
 
       await fetchUsers();
