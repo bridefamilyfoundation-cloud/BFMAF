@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, Menu, X, User, LayoutDashboard, HandHeart } from "lucide-react";
+import { Menu, X, User, LayoutDashboard, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -21,12 +22,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-hero rounded-xl flex items-center justify-center shadow-md group-hover:shadow-glow transition-shadow duration-300">
-              <Heart className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-serif font-bold text-foreground">
-              <span className="text-primary">BFMAF</span>
-            </span>
+            <img 
+              src={logo} 
+              alt="BFMAF Logo" 
+              className="h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}

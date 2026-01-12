@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -13,12 +14,11 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-accent rounded-xl flex items-center justify-center">
-                <Heart className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <span className="text-xl font-serif font-bold">
-                <span className="text-accent">BFMAF</span>
-              </span>
+              <img 
+                src={logo} 
+                alt="BFMAF Logo" 
+                className="h-14 w-auto object-contain bg-white/90 rounded-lg p-1"
+              />
             </Link>
             <p className="text-primary-foreground/70 mb-4 text-sm italic">
               "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
