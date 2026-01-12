@@ -777,13 +777,20 @@ const Admin = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card rounded-2xl p-6 shadow-card">
                 <div>
                   <h1 className="text-2xl font-serif font-bold text-foreground">
-                    {activeTab === "aid-requests" ? "Aid Requests" : "Dashboard"}
+                    {activeTab === "dashboard" && "Dashboard"}
+                    {activeTab === "aid-requests" && "Aid Requests"}
+                    {activeTab === "donations" && "Donations"}
+                    {activeTab === "campaigns" && "Cases Management"}
+                    {activeTab === "users" && "Users"}
+                    {activeTab === "settings" && "Settings"}
                   </h1>
                   <p className="text-muted-foreground">
-                    {activeTab === "aid-requests" 
-                      ? `Review and manage aid requests. ${pendingCount} pending.`
-                      : "Welcome back! Here's what's happening."
-                    }
+                    {activeTab === "dashboard" && "Welcome back! Here's what's happening."}
+                    {activeTab === "aid-requests" && `Review and manage aid requests. ${pendingCount} pending.`}
+                    {activeTab === "donations" && "View and manage all donations."}
+                    {activeTab === "campaigns" && `Manage all ${campaigns.length} cases.`}
+                    {activeTab === "users" && `Manage ${users.length} users. ${pendingUsersCount} pending approval.`}
+                    {activeTab === "settings" && "Configure website settings."}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -929,53 +936,161 @@ const Admin = () => {
                       </div>
                     </div>
 
-                    {/* Campaign Progress */}
+                    {/* Quick Cases Overview */}
                     <div className="bg-card rounded-2xl p-6 shadow-card">
                       <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-serif font-semibold text-foreground">Cases</h2>
-                        <Button variant="ghost" size="sm">
-                          View All
-                          <ChevronDown className="w-4 h-4 ml-1" />
+                        <div>
+                          <h2 className="text-xl font-serif font-semibold text-foreground">Active Cases</h2>
+                          <p className="text-sm text-muted-foreground">{campaigns.filter(c => c.status === "active").length} active cases</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setActiveTab("campaigns")}
+                        >
+                          View All Cases
+                          <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
                         </Button>
                       </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         {campaigns.length > 0 ? (
-                          campaigns.map((campaign) => {
+                          campaigns.slice(0, 5).map((campaign) => {
                             const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
                             return (
-                              <div key={campaign.id} className="space-y-2">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <p className="font-medium text-foreground text-sm line-clamp-1">{campaign.name}</p>
-                                    <p className="text-xs text-muted-foreground">{campaign.donors} donors</p>
+                              <div key={campaign.id} className="p-4 bg-secondary/30 rounded-xl space-y-3">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-foreground line-clamp-1">{campaign.name}</p>
+                                    <p className="text-sm text-muted-foreground">{campaign.donors} donors</p>
                                   </div>
-                                  <span
-                                    className={cn(
-                                      "px-2 py-0.5 rounded-full text-xs font-medium",
-                                      campaign.status === "active"
-                                        ? "bg-success/10 text-success"
-                                        : "bg-muted text-muted-foreground"
-                                    )}
+                                  <Badge
+                                    variant={campaign.status === "active" ? "default" : "secondary"}
+                                    className={campaign.status === "active" ? "bg-success" : ""}
                                   >
                                     {campaign.status}
-                                  </span>
+                                  </Badge>
                                 </div>
                                 <Progress value={progress} className="h-2" />
-                                <div className="flex justify-between text-xs">
-                                  <span className="text-primary font-medium">₦{campaign.raised.toLocaleString()}</span>
-                                  <span className="text-muted-foreground">₦{campaign.goal.toLocaleString()}</span>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-primary font-semibold">₦{campaign.raised.toLocaleString()}</span>
+                                  <span className="text-muted-foreground">of ₦{campaign.goal.toLocaleString()}</span>
                                 </div>
                               </div>
                             );
                           })
                         ) : (
-                          <p className="text-muted-foreground text-center py-4">No cases yet.</p>
+                          <div className="text-center py-8">
+                            <Heart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                            <p className="text-muted-foreground">No cases yet.</p>
+                            <p className="text-sm text-muted-foreground mt-1">Create your first case to get started.</p>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
                 </>
+              )}
+
+              {/* Cases/Campaigns Tab */}
+              {activeTab === "campaigns" && (
+                <div className="bg-card rounded-2xl p-6 shadow-card">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <h2 className="text-xl font-serif font-semibold text-foreground">All Cases</h2>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search cases..."
+                          className="pl-9 w-64"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      <NewCaseDialog onCaseCreated={() => fetchDashboardData()} />
+                    </div>
+                  </div>
+
+                  {campaigns.length === 0 ? (
+                    <div className="text-center py-16">
+                      <Heart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-foreground mb-2">No cases yet</h3>
+                      <p className="text-muted-foreground mb-6">Create your first case to start receiving donations.</p>
+                      <NewCaseDialog onCaseCreated={() => fetchDashboardData()} />
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {campaigns
+                        .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map((campaign) => {
+                          const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
+                          return (
+                            <div 
+                              key={campaign.id} 
+                              className="p-6 border border-border rounded-xl hover:border-primary/30 hover:shadow-md transition-all duration-300"
+                            >
+                              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-4 mb-3">
+                                    <div>
+                                      <h3 className="font-semibold text-foreground text-lg">{campaign.name}</h3>
+                                      <p className="text-sm text-muted-foreground">{campaign.donors} donors</p>
+                                    </div>
+                                    <Badge
+                                      variant={campaign.status === "active" ? "default" : "secondary"}
+                                      className={cn(
+                                        "shrink-0",
+                                        campaign.status === "active" ? "bg-success" : ""
+                                      )}
+                                    >
+                                      {campaign.status === "active" ? "Active" : "Completed"}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-muted-foreground">Progress</span>
+                                      <span className="font-medium text-foreground">{Math.round(progress)}%</span>
+                                    </div>
+                                    <Progress value={progress} className="h-3" />
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-primary font-semibold">₦{campaign.raised.toLocaleString()} raised</span>
+                                      <span className="text-muted-foreground">Goal: ₦{campaign.goal.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 lg:flex-col lg:items-end">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(`/cases/${campaign.id}`, "_blank")}
+                                  >
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    View
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <MoreVertical className="w-4 h-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem>Edit Case</DropdownMenuItem>
+                                      <DropdownMenuItem>View Donations</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-destructive">
+                                        {campaign.status === "active" ? "Deactivate" : "Reactivate"}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
               )}
 
               {activeTab === "aid-requests" && (
