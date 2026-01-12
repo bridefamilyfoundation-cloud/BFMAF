@@ -1,21 +1,84 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, CreditCard, Shield, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Cause {
+  id: string;
+  title: string;
+}
 
 const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
 const Donate = () => {
+  const { toast } = useToast();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
   const [customAmount, setCustomAmount] = useState("");
   const [donationType, setDonationType] = useState("one-time");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [causes, setCauses] = useState<Cause[]>([]);
+  const [selectedCause, setSelectedCause] = useState<string>("");
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    fetchCauses();
+    checkAuth();
+  }, []);
+
+  const fetchCauses = async () => {
+    const { data } = await supabase
+      .from("causes")
+      .select("id, title")
+      .eq("is_active", true)
+      .order("title");
+    
+    if (data) {
+      setCauses(data);
+    }
+  };
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setUser({ id: session.user.id, email: session.user.email || "" });
+      
+      // Pre-fill form with profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      
+      if (profile) {
+        setFormData({
+          firstName: profile.first_name || "",
+          lastName: profile.last_name || "",
+          email: profile.email || session.user.email || "",
+        });
+      }
+    }
+  };
 
   const handleAmountClick = (amount: number) => {
     setSelectedAmount(amount);
@@ -29,9 +92,89 @@ const Donate = () => {
 
   const finalAmount = selectedAmount || Number(customAmount) || 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    if (finalAmount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please select or enter a donation amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Create donation record
+      const donationData: {
+        amount: number;
+        is_recurring: boolean;
+        cause_id: string | null;
+        user_id: string | null;
+        donor_name: string | null;
+        donor_email: string | null;
+        status: string;
+      } = {
+        amount: finalAmount,
+        is_recurring: donationType === "monthly",
+        cause_id: selectedCause || null,
+        user_id: user?.id || null,
+        donor_name: user ? null : `${formData.firstName} ${formData.lastName}`,
+        donor_email: user ? null : formData.email,
+        status: "completed",
+      };
+
+      const { error: donationError } = await supabase
+        .from("donations")
+        .insert(donationData);
+
+      if (donationError) throw donationError;
+
+      // Update cause raised amount if a cause was selected
+      if (selectedCause) {
+        const { data: causeData } = await supabase
+          .from("causes")
+          .select("raised_amount")
+          .eq("id", selectedCause)
+          .single();
+
+        if (causeData) {
+          await supabase
+            .from("causes")
+            .update({ raised_amount: Number(causeData.raised_amount) + finalAmount })
+            .eq("id", selectedCause);
+        }
+      }
+
+      // Log activity if user is logged in
+      if (user) {
+        await supabase.from("activity_log").insert({
+          user_id: user.id,
+          action: "donation",
+          details: {
+            amount: finalAmount,
+            cause_id: selectedCause,
+            is_recurring: donationType === "monthly",
+          },
+        });
+      }
+
+      setIsSubmitted(true);
+      toast({
+        title: "Thank you!",
+        description: "Your donation has been processed successfully.",
+      });
+    } catch (error) {
+      console.error("Donation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process donation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -53,7 +196,12 @@ const Donate = () => {
                 Your generous donation of ${finalAmount.toLocaleString()} will help transform lives.
                 A confirmation email has been sent to you.
               </p>
-              <Button variant="hero" onClick={() => setIsSubmitted(false)}>
+              <Button variant="hero" onClick={() => {
+                setIsSubmitted(false);
+                setSelectedAmount(100);
+                setCustomAmount("");
+                setSelectedCause("");
+              }}>
                 Make Another Donation
               </Button>
             </div>
@@ -91,6 +239,26 @@ const Donate = () => {
           <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-8">
             {/* Donation Amount Selection */}
             <div className="md:col-span-2 space-y-8">
+              {/* Select Cause */}
+              <div className="bg-card rounded-2xl p-8 shadow-card">
+                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+                  Select a Cause (Optional)
+                </h2>
+                <Select value={selectedCause} onValueChange={setSelectedCause}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a cause to support" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">General Fund</SelectItem>
+                    {causes.map((cause) => (
+                      <SelectItem key={cause.id} value={cause.id}>
+                        {cause.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="bg-card rounded-2xl p-8 shadow-card">
                 <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
                   Select Donation Type
@@ -169,15 +337,37 @@ const Donate = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" placeholder="John" className="mt-2" required />
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      className="mt-2"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                    />
                   </div>
                   <div>
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" placeholder="Doe" className="mt-2" required />
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      className="mt-2"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" className="mt-2" required />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john@example.com"
+                      className="mt-2"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -218,6 +408,14 @@ const Donate = () => {
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-medium capitalize">{donationType}</span>
                   </div>
+                  {selectedCause && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cause</span>
+                      <span className="font-medium text-right max-w-[150px] truncate">
+                        {causes.find(c => c.id === selectedCause)?.title || "General"}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount</span>
                     <span className="font-medium">${finalAmount.toLocaleString()}</span>
@@ -238,10 +436,16 @@ const Donate = () => {
                   variant="accent"
                   size="lg"
                   className="w-full"
-                  disabled={finalAmount === 0}
+                  disabled={finalAmount === 0 || isSubmitting}
                 >
-                  <Heart className="w-4 h-4" />
-                  Complete Donation
+                  {isSubmitting ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <Heart className="w-4 h-4" />
+                      Complete Donation
+                    </>
+                  )}
                 </Button>
 
                 <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
