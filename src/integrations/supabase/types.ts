@@ -38,6 +38,69 @@ export type Database = {
         }
         Relationships: []
       }
+      aid_requests: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string
+          goal_amount: number
+          id: string
+          image_urls: string[] | null
+          location: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          urgency: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category?: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          goal_amount?: number
+          id?: string
+          image_urls?: string[] | null
+          location?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          urgency?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          goal_amount?: number
+          id?: string
+          image_urls?: string[] | null
+          location?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          urgency?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       causes: {
         Row: {
           category: string
