@@ -9,8 +9,8 @@ const Footer = () => {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-4 py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="container mx-auto px-4 py-10 sm:py-16 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           {/* Brand */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6">
@@ -107,11 +107,11 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-primary-foreground/50 text-sm">
+        <div className="border-t border-primary-foreground/10 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+          <p className="text-primary-foreground/50 text-xs sm:text-sm">
             © {new Date().getFullYear()} Bride Family Medical Aid Foundation. All rights reserved.
           </p>
-          <p className="text-primary-foreground/50 text-sm flex items-center gap-1">
+          <p className="text-primary-foreground/50 text-xs sm:text-sm flex items-center gap-1">
             Made with <Heart className="w-4 h-4 text-accent" /> for the Bride of Christ
           </p>
         </div>

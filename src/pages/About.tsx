@@ -59,16 +59,16 @@ const About = () => {
 
       <main className="relative z-10">
         {/* Hero Section */}
-        <section className="py-20 px-4 pt-32">
+        <section className="py-12 sm:py-20 px-4 pt-24 sm:pt-32">
           <div className="container mx-auto max-w-4xl text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
               About <span className="text-gradient-primary">BFMAF</span>
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-6 italic">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-4 sm:mb-6 italic px-2">
               "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
             </p>
-            <p className="text-sm text-primary mb-8">— 1 Corinthians 12:26</p>
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-sm text-primary mb-6 sm:mb-8">— 1 Corinthians 12:26</p>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-2">
               Bride Family Medical Aid Foundation (BFMAF) is a platform borne out of compassion 
               to reach out to the severely traumatized believers, brothers and sisters who are 
               in despair due to prolonged or acute conditions that is overwhelming to the 
@@ -79,17 +79,17 @@ const About = () => {
         </section>
 
         {/* Mission Section */}
-        <section className="py-16 px-4 bg-secondary/30">
+        <section className="py-12 sm:py-16 px-4 bg-secondary/30">
           <div className="container mx-auto max-w-6xl">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Our Mission</h2>
-                <p className="text-muted-foreground mb-4">
+            <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
+              <div className="order-2 md:order-1">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6">Our Mission</h2>
+                <p className="text-muted-foreground mb-4 text-sm sm:text-base">
                   To be a bridge of compassion connecting the body of Christ worldwide, ensuring 
                   that no believer faces overwhelming medical conditions alone. We believe that 
                   as the Bride of Christ, we are called to bear one another's burdens.
                 </p>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-6 text-sm sm:text-base">
                   Our mission is to identify, verify, and support believers who are facing 
                   medical emergencies and prolonged conditions that exceed the capacity of 
                   their local church to address.
@@ -100,15 +100,15 @@ const About = () => {
                   </Link>
                 </Button>
               </div>
-              <div className="relative">
+              <div className="relative order-1 md:order-2">
                 <img
                   src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&h=400&fit=crop"
                   alt="Community helping"
-                  className="rounded-2xl shadow-card-hover"
+                  className="rounded-xl sm:rounded-2xl shadow-card-hover w-full"
                 />
-                <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-card">
-                  <div className="text-3xl font-bold text-primary">BFMAF</div>
-                  <div className="text-sm text-muted-foreground">Bride Family Medical Aid</div>
+                <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-card p-4 sm:p-6 rounded-xl shadow-card">
+                  <div className="text-2xl sm:text-3xl font-bold text-primary">BFMAF</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Bride Family Medical Aid</div>
                 </div>
               </div>
             </div>
@@ -116,23 +116,23 @@ const About = () => {
         </section>
 
         {/* How We Help Section */}
-        <section className="py-20 px-4">
+        <section className="py-12 sm:py-20 px-4">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-foreground text-center mb-4">How We Help</h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3 sm:mb-4">How We Help</h2>
+            <p className="text-muted-foreground text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base px-2">
               Such assistance could come in the following ways:
             </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
               {howWeHelp.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
+                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
                 >
-                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="h-7 w-7 text-primary" />
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <item.icon className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                  <h3 className="text-base sm:text-xl font-semibold text-foreground mb-1 sm:mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm line-clamp-3">{item.description}</p>
                 </div>
               ))}
             </div>
@@ -140,20 +140,20 @@ const About = () => {
         </section>
 
         {/* Values Section */}
-        <section className="py-20 px-4 bg-secondary/30">
+        <section className="py-12 sm:py-20 px-4 bg-secondary/30">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-foreground text-center mb-12">Our Values</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8 sm:mb-12">Our Values</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
               {values.map((value, index) => (
                 <div
                   key={index}
-                  className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
+                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
                 >
-                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <value.icon className="h-7 w-7 text-primary" />
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <value.icon className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{value.title}</h3>
-                  <p className="text-muted-foreground text-sm">{value.description}</p>
+                  <h3 className="text-base sm:text-xl font-semibold text-foreground mb-1 sm:mb-2">{value.title}</h3>
+                  <p className="text-muted-foreground text-xs sm:text-sm line-clamp-3">{value.description}</p>
                 </div>
               ))}
             </div>
