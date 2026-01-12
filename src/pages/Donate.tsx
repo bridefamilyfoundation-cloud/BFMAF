@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Heart, CreditCard, Shield, CheckCircle, Building2, Landmark, Copy, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Heart, CreditCard, Shield, CheckCircle, Building2, Landmark, Copy, Check, Upload, XCircle, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 
+type PaymentStatus = "idle" | "success" | "cancelled" | "failed";
+
 const donationAmounts = [1000, 5000, 10000, 25000, 50000, 100000];
 
 const bankDetails = {
@@ -22,7 +24,7 @@ const bankDetails = {
 
 const Donate = () => {
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(10000);
   const [customAmount, setCustomAmount] = useState("");
   const [donationType, setDonationType] = useState("one-time");
@@ -31,6 +33,11 @@ const Donate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -40,14 +47,26 @@ const Donate = () => {
   useEffect(() => {
     checkAuth();
     
-    // Check for payment success from Paystack redirect
+    // Check for payment status from Paystack redirect
     const status = searchParams.get("status");
     const reference = searchParams.get("reference");
+    const trxref = searchParams.get("trxref");
     
-    if (status === "success" && reference) {
-      verifyPayment(reference);
+    // Clear URL params after reading
+    if (status || reference || trxref) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("status");
+      newParams.delete("reference");
+      newParams.delete("trxref");
+      setSearchParams(newParams, { replace: true });
     }
-  }, [searchParams]);
+    
+    if (reference || trxref) {
+      verifyPayment(reference || trxref || "");
+    } else if (status === "cancelled") {
+      setPaymentStatus("cancelled");
+    }
+  }, []);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -79,20 +98,38 @@ const Donate = () => {
       if (error) throw error;
 
       if (data.success) {
-        setIsSubmitted(true);
+        setPaymentStatus("success");
         setSelectedAmount(data.amount);
-        toast({
-          title: "Payment Successful!",
-          description: "Your donation has been processed successfully.",
-        });
+      } else {
+        setPaymentStatus("failed");
       }
     } catch (error) {
       console.error("Payment verification error:", error);
-      toast({
-        title: "Verification Error",
-        description: "Could not verify payment. Please contact support.",
-        variant: "destructive",
-      });
+      setPaymentStatus("failed");
+    }
+  };
+
+  const handleProofFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setProofFile(file);
+      setProofPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeProofFile = () => {
+    setProofFile(null);
+    setProofPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -183,8 +220,37 @@ const Donate = () => {
     }
 
     setIsSubmitting(true);
+    setIsUploadingProof(true);
 
     try {
+      let proofUrl: string | null = null;
+
+      // Upload proof of payment if provided
+      if (proofFile) {
+        const fileExt = proofFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `payment-proofs/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("aid-request-images")
+          .upload(filePath, proofFile);
+
+        if (uploadError) {
+          console.error("Proof upload error:", uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload proof of payment. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("aid-request-images")
+          .getPublicUrl(filePath);
+        proofUrl = urlData.publicUrl;
+      }
+
       // Record the donation as pending for bank transfer
       const donationData = {
         amount: finalAmount,
@@ -211,15 +277,13 @@ const Donate = () => {
             type: "general_fund",
             payment_method: "bank_transfer",
             is_recurring: donationType === "monthly",
+            proof_url: proofUrl,
           },
         });
       }
 
       setIsSubmitted(true);
-      toast({
-        title: "Bank Transfer Initiated",
-        description: "Please complete the transfer using the bank details provided.",
-      });
+      setPaymentStatus("success");
     } catch (error) {
       console.error("Donation error:", error);
       toast({
@@ -229,6 +293,7 @@ const Donate = () => {
       });
     } finally {
       setIsSubmitting(false);
+      setIsUploadingProof(false);
     }
   };
 
@@ -242,7 +307,8 @@ const Donate = () => {
     }
   };
 
-  if (isSubmitted) {
+  // Payment Status Feedback Screens
+  if (paymentStatus === "success" || isSubmitted) {
     return (
       <div className="min-h-screen bg-background relative">
         <FloatingBackground />
@@ -255,19 +321,20 @@ const Donate = () => {
                 <CheckCircle className="w-10 h-10 text-success" />
               </div>
               <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
-                {paymentMethod === "bank" ? "Transfer Initiated!" : "Thank You!"}
+                {paymentMethod === "bank" ? "Transfer Initiated!" : "Payment Successful!"}
               </h1>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-lg text-foreground mb-8">
                 {paymentMethod === "bank" ? (
                   <>
-                    Please complete your transfer of ₦{finalAmount.toLocaleString()} to the General Fund.
+                    Please complete your transfer of <strong>₦{finalAmount.toLocaleString()}</strong> to the General Fund.
                     <br />
-                    <span className="text-sm">Your donation will be confirmed once we receive it.</span>
+                    <span className="text-muted-foreground">Your donation will be confirmed once we receive it.</span>
                   </>
                 ) : (
                   <>
-                    Your generous donation of ₦{finalAmount.toLocaleString()} to the General Fund will help transform lives.
-                    A confirmation email has been sent to you.
+                    Your generous donation of <strong>₦{finalAmount.toLocaleString()}</strong> to the General Fund will help transform lives.
+                    <br />
+                    <span className="text-muted-foreground">A confirmation email has been sent to you.</span>
                   </>
                 )}
               </p>
@@ -278,16 +345,16 @@ const Donate = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Bank Name:</span>
-                      <span className="font-medium">{bankDetails.bankName}</span>
+                      <span className="font-semibold text-foreground">{bankDetails.bankName}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Account Name:</span>
-                      <span className="font-medium">{bankDetails.accountName}</span>
+                      <span className="font-semibold text-foreground">{bankDetails.accountName}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Account Number:</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium font-mono">{bankDetails.accountNumber}</span>
+                        <span className="font-semibold text-foreground font-mono">{bankDetails.accountNumber}</span>
                         <button
                           onClick={() => copyToClipboard(bankDetails.accountNumber, "Account Number")}
                           className="p-1 hover:bg-secondary rounded"
@@ -313,11 +380,94 @@ const Donate = () => {
               </p>
               <Button variant="hero" onClick={() => {
                 setIsSubmitted(false);
+                setPaymentStatus("idle");
                 setSelectedAmount(10000);
                 setCustomAmount("");
+                setProofFile(null);
+                setProofPreview(null);
               }}>
                 Make Another Donation
               </Button>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentStatus === "cancelled") {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <FloatingBackground />
+        <Navbar />
+        
+        <div className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="bg-card rounded-3xl p-12 shadow-card text-center">
+              <div className="w-20 h-20 bg-warm/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-10 h-10 text-warm" />
+              </div>
+              <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
+                Payment Cancelled
+              </h1>
+              <p className="text-lg text-foreground mb-8">
+                Your payment was cancelled. Don't worry, you can try again whenever you're ready.
+                <br />
+                <span className="text-muted-foreground">No charges have been made to your account.</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="hero" onClick={() => setPaymentStatus("idle")}>
+                  Try Again
+                </Button>
+                <Button variant="outline" onClick={() => window.location.href = "/"}>
+                  Return Home
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentStatus === "failed") {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <FloatingBackground />
+        <Navbar />
+        
+        <div className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="bg-card rounded-3xl p-12 shadow-card text-center">
+              <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <XCircle className="w-10 h-10 text-destructive" />
+              </div>
+              <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
+                Payment Failed
+              </h1>
+              <p className="text-lg text-foreground mb-8">
+                We couldn't verify your payment. This could be due to insufficient funds, network issues, or card restrictions.
+                <br />
+                <span className="text-muted-foreground">Please try again or use a different payment method.</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="hero" onClick={() => setPaymentStatus("idle")}>
+                  Try Again
+                </Button>
+                <Button variant="outline" onClick={() => {
+                  setPaymentStatus("idle");
+                  setPaymentMethod("bank");
+                }}>
+                  Use Bank Transfer
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-6">
+                Need help? Contact us at <a href="mailto:support@bfmaf.org" className="text-primary hover:underline font-medium">support@bfmaf.org</a>
+              </p>
             </div>
           </div>
         </div>
@@ -600,9 +750,51 @@ const Donate = () => {
                       </button>
                     </div>
                     <div className="p-4 bg-primary/10 rounded-xl border border-primary/20">
-                      <p className="text-sm text-muted-foreground">
-                        <strong className="text-foreground">Note:</strong> Please use your email address as the transfer reference/narration so we can identify your donation.
+                      <p className="text-sm text-foreground">
+                        <strong>Note:</strong> Please use your email address as the transfer reference/narration so we can identify your donation.
                       </p>
+                    </div>
+
+                    {/* Proof of Payment Upload */}
+                    <div className="mt-6 pt-6 border-t border-border">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Upload className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold text-foreground">Upload Proof of Payment</h3>
+                        <span className="text-xs text-muted-foreground">(Optional)</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Upload a screenshot of your transfer receipt to speed up verification.
+                      </p>
+                      
+                      {proofPreview ? (
+                        <div className="relative">
+                          <img
+                            src={proofPreview}
+                            alt="Proof of payment"
+                            className="w-full max-h-48 object-contain rounded-xl border border-border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeProofFile}
+                            className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:bg-primary/5 transition-colors">
+                          <Upload className="w-8 h-8 text-primary/50 mb-2" />
+                          <span className="text-sm text-muted-foreground">Click to upload proof</span>
+                          <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleProofFileChange}
+                          />
+                        </label>
+                      )}
                     </div>
                   </div>
                 </div>
