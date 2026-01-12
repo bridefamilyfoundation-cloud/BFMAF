@@ -22,12 +22,26 @@ import {
   Clock,
   AlertCircle,
   Loader2,
+  Save,
+  Mail,
+  Phone,
+  MapPin,
+  Shield,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,6 +107,30 @@ interface AidRequest {
   created_at: string;
 }
 
+interface UserProfile {
+  id: string;
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  created_at: string;
+  role: string;
+}
+
+interface SiteSettings {
+  organization_name: string;
+  tagline: string;
+  description: string;
+  address: string;
+  phone1: string;
+  phone2: string;
+  email: string;
+  scripture_reference: string;
+  scripture_text: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -112,6 +150,26 @@ const Admin = () => {
   const [adminNotes, setAdminNotes] = useState("");
   const [processingRequest, setProcessingRequest] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Users state
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
+
+  // Settings state
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({
+    organization_name: "Bride Family Medical Aid Foundation",
+    tagline: "BFMAF",
+    description: "A platform borne out of compassion to reach out to severely traumatized believers.",
+    address: "Divine Love Christian Assembly Jos, Longwa Phase II Behind Millennium Hotel Jos",
+    phone1: "07032128927",
+    phone2: "08036638890",
+    email: "info@bfmaf.org",
+    scripture_reference: "1 Corinthians 12:26",
+    scripture_text: "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it.",
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     checkAdminAndFetchData();
@@ -145,7 +203,124 @@ const Admin = () => {
     setIsAdmin(true);
     await fetchDashboardData();
     await fetchAidRequests();
+    await fetchUsers();
+    await fetchSiteSettings();
     setLoading(false);
+  };
+
+  const fetchUsers = async () => {
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      return;
+    }
+
+    // Get roles for each user
+    const { data: roles } = await supabase.from("user_roles").select("*");
+
+    const usersWithRoles = (profiles || []).map((profile) => {
+      const userRole = roles?.find((r) => r.user_id === profile.user_id);
+      return {
+        ...profile,
+        role: userRole?.role || "user",
+      };
+    });
+
+    setUsers(usersWithRoles);
+  };
+
+  const fetchSiteSettings = async () => {
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("key, value");
+
+    if (error) {
+      console.error("Error fetching site settings:", error);
+      return;
+    }
+
+    if (data) {
+      const settings: Partial<SiteSettings> = {};
+      data.forEach((item) => {
+        if (item.key && item.value) {
+          (settings as any)[item.key] = item.value;
+        }
+      });
+      setSiteSettings((prev) => ({ ...prev, ...settings }));
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const settingsToSave = Object.entries(siteSettings);
+      
+      for (const [key, value] of settingsToSave) {
+        await supabase
+          .from("site_settings")
+          .upsert({ key, value, updated_by: user?.id }, { onConflict: "key" });
+      }
+
+      toast({
+        title: "Settings Saved",
+        description: "Website settings have been updated successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error saving settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    setUpdatingRole(true);
+    try {
+      if (newRole === "user") {
+        // Remove admin/moderator role
+        await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId);
+      } else {
+        // Delete existing role first, then insert new one
+        await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId);
+        
+        await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: newRole as "admin" | "moderator" | "user" });
+      }
+
+      toast({
+        title: "Role Updated",
+        description: `User role has been updated to ${newRole}.`,
+      });
+
+      await fetchUsers();
+      setShowUserDialog(false);
+    } catch (error: any) {
+      console.error("Error updating role:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingRole(false);
+    }
   };
 
   const fetchAidRequests = async () => {
@@ -800,10 +975,356 @@ const Admin = () => {
                   </div>
                 </div>
               )}
+
+              {/* Users Tab */}
+              {activeTab === "users" && (
+                <div className="bg-card rounded-2xl p-6 shadow-card">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-serif font-semibold text-foreground">Users</h2>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users..."
+                        className="pl-9 w-64"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">User</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Contact</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Location</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Role</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Joined</th>
+                          <th className="py-3 px-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users
+                          .filter(
+                            (u) =>
+                              u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                          )
+                          .map((user) => (
+                            <tr key={user.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
+                              <td className="py-4 px-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-medium text-sm">
+                                    {(user.first_name?.[0] || "") + (user.last_name?.[0] || "") || "U"}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-foreground">
+                                      {user.first_name || user.last_name
+                                        ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+                                        : "No Name"}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">{user.email || "No email"}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <div className="text-sm">
+                                  {user.phone ? (
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <Phone className="w-3 h-3" /> {user.phone}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <div className="text-sm">
+                                  {user.address ? (
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <MapPin className="w-3 h-3" /> {user.address}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-4 px-2">
+                                <Badge
+                                  variant={user.role === "admin" ? "default" : "outline"}
+                                  className={cn(
+                                    user.role === "admin" && "bg-primary",
+                                    user.role === "moderator" && "bg-accent text-accent-foreground"
+                                  )}
+                                >
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  {user.role}
+                                </Badge>
+                              </td>
+                              <td className="py-4 px-2 text-sm text-muted-foreground">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="py-4 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setShowUserDialog(true);
+                                  }}
+                                >
+                                  <UserCog className="w-4 h-4 mr-1" />
+                                  Manage
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        {users.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                              No users found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Settings Tab */}
+              {activeTab === "settings" && (
+                <div className="space-y-6">
+                  <div className="bg-card rounded-2xl p-6 shadow-card">
+                    <h2 className="text-xl font-serif font-semibold text-foreground mb-6">Website Settings</h2>
+                    
+                    <div className="space-y-6">
+                      {/* Organization Info */}
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-foreground border-b border-border pb-2">Organization Information</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="org_name">Organization Name</Label>
+                            <Input
+                              id="org_name"
+                              value={siteSettings.organization_name}
+                              onChange={(e) =>
+                                setSiteSettings({ ...siteSettings, organization_name: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="tagline">Short Name / Tagline</Label>
+                            <Input
+                              id="tagline"
+                              value={siteSettings.tagline}
+                              onChange={(e) =>
+                                setSiteSettings({ ...siteSettings, tagline: e.target.value })
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={siteSettings.description}
+                            onChange={(e) =>
+                              setSiteSettings({ ...siteSettings, description: e.target.value })
+                            }
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contact Info */}
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-foreground border-b border-border pb-2">Contact Information</h3>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="address">Address</Label>
+                          <Input
+                            id="address"
+                            value={siteSettings.address}
+                            onChange={(e) =>
+                              setSiteSettings({ ...siteSettings, address: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="phone1">Phone Number 1</Label>
+                            <Input
+                              id="phone1"
+                              value={siteSettings.phone1}
+                              onChange={(e) =>
+                                setSiteSettings({ ...siteSettings, phone1: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone2">Phone Number 2</Label>
+                            <Input
+                              id="phone2"
+                              value={siteSettings.phone2}
+                              onChange={(e) =>
+                                setSiteSettings({ ...siteSettings, phone2: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={siteSettings.email}
+                              onChange={(e) =>
+                                setSiteSettings({ ...siteSettings, email: e.target.value })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scripture */}
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-foreground border-b border-border pb-2">Scripture Reference</h3>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="scripture_ref">Scripture Reference</Label>
+                          <Input
+                            id="scripture_ref"
+                            placeholder="e.g., 1 Corinthians 12:26"
+                            value={siteSettings.scripture_reference}
+                            onChange={(e) =>
+                              setSiteSettings({ ...siteSettings, scripture_reference: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="scripture_text">Scripture Text</Label>
+                          <Textarea
+                            id="scripture_text"
+                            value={siteSettings.scripture_text}
+                            onChange={(e) =>
+                              setSiteSettings({ ...siteSettings, scripture_text: e.target.value })
+                            }
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Save Button */}
+                      <div className="pt-4 border-t border-border">
+                        <Button
+                          variant="hero"
+                          onClick={handleSaveSettings}
+                          disabled={savingSettings}
+                        >
+                          {savingSettings ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Settings
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </main>
           </div>
         </div>
       </div>
+
+      {/* User Role Dialog */}
+      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Manage User</DialogTitle>
+            <DialogDescription>
+              {selectedUser?.first_name || selectedUser?.last_name
+                ? `${selectedUser?.first_name || ""} ${selectedUser?.last_name || ""}`.trim()
+                : selectedUser?.email || "User"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="bg-secondary/30 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span>{selectedUser.email || "No email"}</span>
+                </div>
+                {selectedUser.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <span>{selectedUser.phone}</span>
+                  </div>
+                )}
+                {selectedUser.address && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    <span>{selectedUser.address}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>User Role</Label>
+                <Select
+                  value={selectedUser.role}
+                  onValueChange={(value) => setSelectedUser({ ...selectedUser, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="moderator">Moderator</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUserDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="hero"
+              onClick={() => selectedUser && handleUpdateUserRole(selectedUser.user_id, selectedUser.role)}
+              disabled={updatingRole}
+            >
+              {updatingRole ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Save Role
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Aid Request Review Dialog */}
       <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
