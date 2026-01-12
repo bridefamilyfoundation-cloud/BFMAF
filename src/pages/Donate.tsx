@@ -503,18 +503,18 @@ const Donate = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-8">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Donation Amount Selection */}
-            <div className="md:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
               {/* General Fund Notice */}
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                    <Heart className="w-6 h-6 text-primary" />
+              <div className="bg-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-2">General Fund Donation</h3>
-                    <p className="text-muted-foreground text-sm">
+                    <h3 className="font-semibold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">General Fund Donation</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">
                       Your donation goes directly to the BFMAF General Fund, which allows us to allocate resources 
                       to the most urgent cases and provide immediate assistance to members in need.
                     </p>
@@ -522,54 +522,54 @@ const Donate = () => {
                 </div>
               </div>
 
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
                   Select Donation Type
                 </h2>
                 <RadioGroup
                   value={donationType}
                   onValueChange={setDonationType}
-                  className="flex gap-4"
+                  className="flex flex-col sm:flex-row gap-3 sm:gap-4"
                 >
                   <Label
                     htmlFor="one-time"
                     className={cn(
-                      "flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
+                      "flex-1 flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
                       donationType === "one-time"
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     )}
                   >
                     <RadioGroupItem value="one-time" id="one-time" />
-                    <span className="font-medium">One-time</span>
+                    <span className="font-medium text-sm sm:text-base">One-time</span>
                   </Label>
                   <Label
                     htmlFor="monthly"
                     className={cn(
-                      "flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
+                      "flex-1 flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
                       donationType === "monthly"
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     )}
                   >
                     <RadioGroupItem value="monthly" id="monthly" />
-                    <span className="font-medium">Monthly</span>
+                    <span className="font-medium text-sm sm:text-base">Monthly</span>
                   </Label>
                 </RadioGroup>
               </div>
 
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
                   Choose Amount
                 </h2>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                   {donationAmounts.map((amount) => (
                     <button
                       key={amount}
                       type="button"
                       onClick={() => handleAmountClick(amount)}
                       className={cn(
-                        "p-4 rounded-xl border-2 font-semibold text-lg transition-all duration-300",
+                        "p-3 sm:p-4 rounded-xl border-2 font-semibold text-base sm:text-lg transition-all duration-300",
                         selectedAmount === amount
                           ? "border-primary bg-primary text-primary-foreground shadow-glow"
                           : "border-border hover:border-primary/50 text-foreground"
@@ -593,40 +593,40 @@ const Donate = () => {
                 </div>
               </div>
 
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
                   Personal Information
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName" className="text-sm">First Name</Label>
                     <Input
                       id="firstName"
                       placeholder="John"
-                      className="mt-2"
+                      className="mt-1.5 sm:mt-2"
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-sm">Last Name</Label>
                     <Input
                       id="lastName"
                       placeholder="Doe"
-                      className="mt-2"
+                      className="mt-1.5 sm:mt-2"
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       required
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="email">Email Address</Label>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="email" className="text-sm">Email Address</Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="john@example.com"
-                      className="mt-2"
+                      className="mt-1.5 sm:mt-2"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
@@ -636,37 +636,37 @@ const Donate = () => {
               </div>
 
               {/* Payment Method Selection */}
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
                   Select Payment Method
                 </h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
                     className={cn(
-                      "p-6 rounded-xl border-2 transition-all duration-300 text-left",
+                      "p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 text-left",
                       paymentMethod === "card"
                         ? "border-primary bg-primary/5 shadow-glow"
                         : "border-border hover:border-primary/50"
                     )}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
                         paymentMethod === "card" ? "bg-primary text-primary-foreground" : "bg-secondary"
                       )}>
-                        <CreditCard className="w-6 h-6" />
+                        <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">Card Payment</h3>
-                        <p className="text-sm text-muted-foreground">Pay securely with Paystack</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Card Payment</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Pay securely with Paystack</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-2">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Mastercard-logo.png/200px-Mastercard-logo.png" alt="Mastercard" className="h-6 object-contain" />
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" alt="Visa" className="h-6 object-contain" />
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Verve-logo.svg/200px-Verve-logo.svg.png" alt="Verve" className="h-4 object-contain" />
+                    <div className="mt-3 sm:mt-4 flex items-center gap-2">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Mastercard-logo.png/200px-Mastercard-logo.png" alt="Mastercard" className="h-5 sm:h-6 object-contain" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" alt="Visa" className="h-5 sm:h-6 object-contain" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Verve-logo.svg/200px-Verve-logo.svg.png" alt="Verve" className="h-3 sm:h-4 object-contain" />
                     </div>
                   </button>
                   
@@ -674,25 +674,25 @@ const Donate = () => {
                     type="button"
                     onClick={() => setPaymentMethod("bank")}
                     className={cn(
-                      "p-6 rounded-xl border-2 transition-all duration-300 text-left",
+                      "p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 text-left",
                       paymentMethod === "bank"
                         ? "border-primary bg-primary/5 shadow-glow"
                         : "border-border hover:border-primary/50"
                     )}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
                         paymentMethod === "bank" ? "bg-primary text-primary-foreground" : "bg-secondary"
                       )}>
-                        <Landmark className="w-6 h-6" />
+                        <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">Bank Transfer</h3>
-                        <p className="text-sm text-muted-foreground">Direct deposit to our account</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Bank Transfer</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Direct deposit to our account</p>
                       </div>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-3 sm:mt-4">
                       <span className="text-xs text-muted-foreground">All Nigerian banks supported</span>
                     </div>
                   </button>
@@ -701,68 +701,68 @@ const Donate = () => {
 
               {/* Bank Transfer Details */}
               {paymentMethod === "bank" && (
-                <div className="bg-card rounded-2xl p-8 shadow-card border-2 border-dashed border-primary/30">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Building2 className="w-6 h-6 text-primary" />
-                    <h2 className="text-xl font-serif font-semibold text-foreground">
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card border-2 border-dashed border-primary/30">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground">
                       Bank Transfer Details
                     </h2>
                   </div>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-4 bg-secondary/50 rounded-xl">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
                       <div>
-                        <span className="text-sm text-muted-foreground">Bank Name</span>
-                        <p className="font-semibold text-foreground">{bankDetails.bankName}</p>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Bank Name</span>
+                        <p className="font-semibold text-foreground text-sm sm:text-base">{bankDetails.bankName}</p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-secondary/50 rounded-xl">
-                      <div>
-                        <span className="text-sm text-muted-foreground">Account Name</span>
-                        <p className="font-semibold text-foreground">{bankDetails.accountName}</p>
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Account Name</span>
+                        <p className="font-semibold text-foreground text-sm sm:text-base truncate">{bankDetails.accountName}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => copyToClipboard(bankDetails.accountName, "Account Name")}
-                        className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                        className="p-2 hover:bg-secondary rounded-lg transition-colors shrink-0 ml-2"
                       >
                         {copiedField === "Account Name" ? (
-                          <Check className="w-5 h-5 text-success" />
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
                         ) : (
-                          <Copy className="w-5 h-5 text-muted-foreground" />
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         )}
                       </button>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-secondary/50 rounded-xl">
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
                       <div>
-                        <span className="text-sm text-muted-foreground">Account Number</span>
-                        <p className="font-semibold text-foreground font-mono text-lg">{bankDetails.accountNumber}</p>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Account Number</span>
+                        <p className="font-semibold text-foreground font-mono text-base sm:text-lg">{bankDetails.accountNumber}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => copyToClipboard(bankDetails.accountNumber, "Account Number")}
-                        className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                        className="p-2 hover:bg-secondary rounded-lg transition-colors shrink-0"
                       >
                         {copiedField === "Account Number" ? (
-                          <Check className="w-5 h-5 text-success" />
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
                         ) : (
-                          <Copy className="w-5 h-5 text-muted-foreground" />
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         )}
                       </button>
                     </div>
-                    <div className="p-4 bg-primary/10 rounded-xl border border-primary/20">
-                      <p className="text-sm text-foreground">
+                    <div className="p-3 sm:p-4 bg-primary/10 rounded-xl border border-primary/20">
+                      <p className="text-xs sm:text-sm text-foreground">
                         <strong>Note:</strong> Please use your email address as the transfer reference/narration so we can identify your donation.
                       </p>
                     </div>
 
                     {/* Proof of Payment Upload */}
-                    <div className="mt-6 pt-6 border-t border-border">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Upload className="w-5 h-5 text-primary" />
-                        <h3 className="font-semibold text-foreground">Upload Proof of Payment</h3>
+                    <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+                      <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+                        <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Upload Proof of Payment</h3>
                         <span className="text-xs text-muted-foreground">(Optional)</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                         Upload a screenshot of your transfer receipt to speed up verification.
                       </p>
                       
@@ -771,7 +771,7 @@ const Donate = () => {
                           <img
                             src={proofPreview}
                             alt="Proof of payment"
-                            className="w-full max-h-48 object-contain rounded-xl border border-border"
+                            className="w-full max-h-40 sm:max-h-48 object-contain rounded-xl border border-border"
                           />
                           <button
                             type="button"
@@ -782,9 +782,9 @@ const Donate = () => {
                           </button>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:bg-primary/5 transition-colors">
-                          <Upload className="w-8 h-8 text-primary/50 mb-2" />
-                          <span className="text-sm text-muted-foreground">Click to upload proof</span>
+                        <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:bg-primary/5 transition-colors">
+                          <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-primary/50 mb-2" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">Click to upload proof</span>
                           <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
                           <input
                             ref={fileInputRef}
@@ -802,33 +802,33 @@ const Donate = () => {
             </div>
 
             {/* Order Summary */}
-            <div className="md:col-span-1">
-              <div className="bg-card rounded-2xl p-6 shadow-card sticky top-28">
-                <h3 className="text-lg font-serif font-semibold text-foreground mb-6">
+            <div className="lg:col-span-1">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-28">
+                <h3 className="text-base sm:text-lg font-serif font-semibold text-foreground mb-4 sm:mb-6">
                   Donation Summary
                 </h3>
 
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between">
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-medium capitalize">{donationType}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-muted-foreground">Fund</span>
                     <span className="font-medium">General Fund</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-muted-foreground">Payment Method</span>
-                    <span className="font-medium capitalize">
+                    <span className="font-medium capitalize text-right">
                       {paymentMethod === "card" ? "Card (Paystack)" : "Bank Transfer"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span className="text-muted-foreground">Amount</span>
                     <span className="font-medium">₦{finalAmount.toLocaleString()}</span>
                   </div>
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between text-lg">
+                  <div className="border-t pt-3 sm:pt-4">
+                    <div className="flex justify-between text-base sm:text-lg">
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-primary">
                         ₦{finalAmount.toLocaleString()}
@@ -842,7 +842,7 @@ const Donate = () => {
                   type="submit"
                   variant="accent"
                   size="lg"
-                  className="w-full"
+                  className="w-full text-sm sm:text-base"
                   disabled={finalAmount === 0 || isSubmitting}
                 >
                   {isSubmitting ? (
@@ -860,8 +860,8 @@ const Donate = () => {
                   )}
                 </Button>
 
-                <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Shield className="w-4 h-4 text-success" />
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-success shrink-0" />
                   <span>Secure 256-bit SSL encryption</span>
                 </div>
               </div>

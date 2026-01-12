@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface ActivityItem {
   id: string;
@@ -104,17 +105,17 @@ const Activity = () => {
 
       <main className="relative z-10">
         {/* Header */}
-        <section className="py-16 px-4">
+        <section className="py-12 sm:py-16 px-4 pt-24 sm:pt-32">
           <div className="container mx-auto max-w-4xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 text-center">
               Your <span className="text-gradient-primary">Activity</span>
             </h1>
-            <p className="text-lg text-muted-foreground text-center mb-8">
+            <p className="text-base sm:text-lg text-muted-foreground text-center mb-6 sm:mb-8">
               Track your donations, profile updates, and engagement history.
             </p>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -124,14 +125,17 @@ const Activity = () => {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                 {["all", "donation", "profile_update"].map((type) => (
                   <Button
                     key={type}
                     variant={filterType === type ? "default" : "outline"}
                     size="sm"
                     onClick={() => setFilterType(type)}
-                    className={filterType === type ? "bg-primary" : ""}
+                    className={cn(
+                      "shrink-0 text-xs sm:text-sm",
+                      filterType === type ? "bg-primary" : ""
+                    )}
                   >
                     {type === "all"
                       ? "All"
@@ -150,22 +154,22 @@ const Activity = () => {
                 <p className="text-muted-foreground">Loading activities...</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {filteredActivities.length > 0 ? (
                   filteredActivities.map((activity) => (
                     <div
                       key={activity.id}
-                      className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow flex items-start gap-4"
+                      className="bg-card p-4 sm:p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow flex items-start gap-3 sm:gap-4"
                     >
-                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
                         {getActionIcon(activity.action)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge className={getActionColor(activity.action)}>
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                          <Badge className={cn(getActionColor(activity.action), "text-xs")}>
                             {activity.action.replace("_", " ")}
                           </Badge>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-xs sm:text-sm text-muted-foreground">
                             {formatDate(activity.created_at)}
                           </span>
                         </div>
