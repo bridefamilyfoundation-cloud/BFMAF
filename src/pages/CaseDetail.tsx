@@ -87,29 +87,29 @@ const CaseDetail = () => {
       <FloatingBackground />
       <Navbar />
 
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4">
         <div className="container mx-auto">
           {/* Back Button */}
           <Link
             to="/cases"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-8"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 sm:mb-8 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Cases
           </Link>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               {/* Hero Image */}
-              <div className="relative rounded-2xl overflow-hidden">
+              <div className="relative rounded-xl sm:rounded-2xl overflow-hidden">
                 <img
                   src={caseData.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop"}
                   alt={caseData.title}
-                  className="w-full h-[400px] object-cover"
+                  className="w-full h-[250px] sm:h-[350px] lg:h-[400px] object-cover"
                 />
-                <div className="absolute top-4 left-4">
-                  <span className="px-4 py-2 bg-primary/90 text-primary-foreground text-sm font-semibold rounded-full backdrop-blur-sm">
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                  <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/90 text-primary-foreground text-xs sm:text-sm font-semibold rounded-full backdrop-blur-sm">
                     {caseData.category}
                   </span>
                 </div>
@@ -117,86 +117,86 @@ const CaseDetail = () => {
 
               {/* Title & Description */}
               <div>
-                <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-3 sm:mb-4">
                   {caseData.title}
                 </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
                   <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {donorCount} donors
                   </div>
                   <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Started {new Date(caseData.created_at).toLocaleDateString()}
                   </div>
                 </div>
               </div>
 
               {/* Full Description */}
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-4">About This Case</h2>
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-3 sm:mb-4">About This Case</h2>
                 <div className="prose prose-muted max-w-none">
                   {caseData.description ? (
                     caseData.description.split("\n\n").map((paragraph, index) => (
-                      <p key={index} className="text-muted-foreground mb-4 whitespace-pre-line">
+                      <p key={index} className="text-muted-foreground mb-3 sm:mb-4 whitespace-pre-line text-sm sm:text-base">
                         {paragraph}
                       </p>
                     ))
                   ) : (
-                    <p className="text-muted-foreground">No description available.</p>
+                    <p className="text-muted-foreground text-sm sm:text-base">No description available.</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Donation Card */}
-              <div className="bg-card rounded-2xl p-6 shadow-card sticky top-28">
-                <div className="mb-6">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-28">
+                <div className="mb-4 sm:mb-6">
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-3xl font-bold text-primary">${raised.toLocaleString()}</span>
-                    <span className="text-muted-foreground">of ${goal.toLocaleString()}</span>
+                    <span className="text-2xl sm:text-3xl font-bold text-primary">₦{raised.toLocaleString()}</span>
+                    <span className="text-muted-foreground text-sm">of ₦{goal.toLocaleString()}</span>
                   </div>
-                  <Progress value={progress} className="h-3 mb-4" />
-                  <div className="grid grid-cols-2 gap-4 text-center">
+                  <Progress value={progress} className="h-2.5 sm:h-3 mb-3 sm:mb-4" />
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-foreground">{donorCount}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-foreground">{donorCount}</div>
                       <div className="text-xs text-muted-foreground">Donors</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-foreground">{Math.round(progress)}%</div>
+                      <div className="text-xl sm:text-2xl font-bold text-foreground">{Math.round(progress)}%</div>
                       <div className="text-xs text-muted-foreground">Funded</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <Link to={`/donate?case=${caseData.id}`} className="block">
-                    <Button variant="hero" size="lg" className="w-full">
-                      <Heart className="w-5 h-5" />
+                    <Button variant="hero" size="lg" className="w-full text-sm sm:text-base">
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
                       Donate Now
                     </Button>
                   </Link>
-                  <Button variant="outline" size="lg" className="w-full">
-                    <Share2 className="w-5 h-5" />
+                  <Button variant="outline" size="lg" className="w-full text-sm sm:text-base">
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     Share This Case
                   </Button>
                 </div>
               </div>
 
               {/* Goal Info */}
-              <div className="bg-card rounded-2xl p-6 shadow-card">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Target className="w-5 h-5 text-primary" />
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Funding Goal</h3>
-                    <p className="text-sm text-muted-foreground">${goal.toLocaleString()} needed</p>
+                    <h3 className="font-semibold text-foreground text-sm sm:text-base">Funding Goal</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">₦{goal.toLocaleString()} needed</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Every donation, no matter the size, brings us closer to our goal and helps transform lives.
                 </p>
               </div>

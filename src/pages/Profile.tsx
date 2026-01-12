@@ -203,111 +203,115 @@ const Profile = () => {
       <FloatingBackground />
       <Navbar />
 
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4">
         <div className="container mx-auto max-w-5xl">
           {/* Profile Header */}
-          <div className="bg-card rounded-3xl p-8 shadow-card mb-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="bg-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-card mb-6 sm:mb-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl" />
             
-            <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-8 items-center relative z-10">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full bg-gradient-hero flex items-center justify-center shadow-glow">
-                  <User className="w-16 h-16 text-primary-foreground" />
+                <div className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-gradient-hero flex items-center justify-center shadow-glow">
+                  <User className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-primary-foreground" />
                 </div>
-                <button className="absolute bottom-0 right-0 w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Camera className="w-5 h-5 text-accent-foreground" />
+                <button className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-accent rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-accent-foreground" />
                 </button>
               </div>
 
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground mb-1 sm:mb-2">
                   {formData.firstName} {formData.lastName}
                 </h1>
-                <p className="text-muted-foreground mb-4">{formData.email}</p>
-                <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                    <Heart className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">
-                      ${totalDonated.toLocaleString()} donated
+                <p className="text-muted-foreground text-sm sm:text-base mb-3 sm:mb-4">{formData.email}</p>
+                <div className="flex flex-wrap gap-2 sm:gap-4 justify-center sm:justify-start">
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full">
+                    <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    <span className="text-xs sm:text-sm font-medium text-primary">
+                      ₦{totalDonated.toLocaleString()} donated
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full">
-                    <Calendar className="w-4 h-4 text-accent" />
-                    <span className="text-sm font-medium text-accent">
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent/10 rounded-full">
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
+                    <span className="text-xs sm:text-sm font-medium text-accent">
                       Member since {profile ? new Date(profile.created_at).getFullYear() : ""}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-2 sm:mt-0">
                 <Button
                   variant={isEditing ? "hero" : "outline"}
                   onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                   disabled={saving}
+                  size="sm"
+                  className="text-xs sm:text-sm"
                 >
                   {isEditing ? (
                     <>
-                      <Save className="w-4 h-4" />
-                      {saving ? "Saving..." : "Save Changes"}
+                      <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">{saving ? "Saving..." : "Save Changes"}</span>
+                      <span className="sm:hidden">{saving ? "..." : "Save"}</span>
                     </>
                   ) : (
                     <>
-                      <Edit2 className="w-4 h-4" />
-                      Edit Profile
+                      <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Edit Profile</span>
+                      <span className="sm:hidden">Edit</span>
                     </>
                   )}
                 </Button>
-                <Button variant="ghost" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4" />
+                <Button variant="ghost" onClick={handleLogout} size="sm">
+                  <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="overview" className="space-y-8">
-            <TabsList className="w-full justify-start bg-card rounded-xl p-2 shadow-card">
-              <TabsTrigger value="overview" className="rounded-lg">Overview</TabsTrigger>
-              <TabsTrigger value="donations" className="rounded-lg">Donation History</TabsTrigger>
-              <TabsTrigger value="settings" className="rounded-lg">Account Settings</TabsTrigger>
+          <Tabs defaultValue="overview" className="space-y-6 sm:space-y-8">
+            <TabsList className="w-full justify-start bg-card rounded-xl p-1.5 sm:p-2 shadow-card overflow-x-auto">
+              <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="donations" className="rounded-lg text-xs sm:text-sm">Donations</TabsTrigger>
+              <TabsTrigger value="settings" className="rounded-lg text-xs sm:text-sm">Settings</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-8">
+            <TabsContent value="overview" className="space-y-6 sm:space-y-8">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-card rounded-2xl p-6 shadow-card">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <Heart className="w-6 h-6 text-primary" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Donated</p>
-                      <p className="text-2xl font-serif font-bold text-foreground">
-                        ${totalDonated.toLocaleString()}
+                      <p className="text-xs sm:text-sm text-muted-foreground">Total Donated</p>
+                      <p className="text-lg sm:text-2xl font-serif font-bold text-foreground">
+                        ₦{totalDonated.toLocaleString()}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-card rounded-2xl p-6 shadow-card">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-accent" />
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-xl flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Causes Supported</p>
-                      <p className="text-2xl font-serif font-bold text-foreground">{causesSupported}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Causes Supported</p>
+                      <p className="text-lg sm:text-2xl font-serif font-bold text-foreground">{causesSupported}</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-card rounded-2xl p-6 shadow-card">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-success" />
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">This Month</p>
-                      <p className="text-2xl font-serif font-bold text-foreground">${thisMonthDonations.toLocaleString()}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">This Month</p>
+                      <p className="text-lg sm:text-2xl font-serif font-bold text-foreground">₦{thisMonthDonations.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
