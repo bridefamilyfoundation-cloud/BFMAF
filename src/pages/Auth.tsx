@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sendWelcomeEmail } from "@/lib/email";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -92,11 +93,15 @@ const Auth = () => {
           last_name: signupData.lastName,
           email: signupData.email,
         });
+
+        // Send welcome email
+        const fullName = `${signupData.firstName} ${signupData.lastName}`.trim();
+        sendWelcomeEmail(signupData.email, fullName).catch(console.error);
       }
 
       toast({
         title: "Account Created!",
-        description: "Welcome to HopeFund. You're now logged in.",
+        description: "Welcome to BFMAF. Your account is pending approval.",
       });
     } catch (error: unknown) {
       console.error("Signup error:", error);
@@ -117,10 +122,10 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome to <span className="text-gradient-primary">HopeFund</span>
+            Welcome to <span className="text-gradient-primary">BFMAF</span>
           </h1>
           <p className="text-muted-foreground">
-            Join our community of changemakers
+            Join our community of compassion
           </p>
         </div>
 
