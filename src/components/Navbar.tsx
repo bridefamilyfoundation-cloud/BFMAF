@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LayoutDashboard, HandHeart, ChevronRight } from "lucide-react";
+import { Menu, X, User, HandHeart, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
@@ -100,15 +100,6 @@ const Navbar = () => {
                 <User className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/admin">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-secondary hover:text-primary transition-all duration-300"
-              >
-                <LayoutDashboard className="w-5 h-5" />
-              </Button>
-            </Link>
             <Link to="/get-help">
               <Button
                 variant="accent"
@@ -173,20 +164,12 @@ const Navbar = () => {
 
             <div className="h-px bg-border/50 my-4" />
 
-            <div className="grid grid-cols-2 gap-3">
-              <Link to="/profile" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" className="w-full rounded-xl h-12">
-                  <User className="w-4 h-4" />
-                  Profile
-                </Button>
-              </Link>
-              <Link to="/admin" onClick={() => setIsOpen(false)}>
-                <Button variant="secondary" className="w-full rounded-xl h-12">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Admin
-                </Button>
-              </Link>
-            </div>
+            <Link to="/profile" onClick={() => setIsOpen(false)} className="block">
+              <Button variant="outline" className="w-full rounded-xl h-12">
+                <User className="w-4 h-4" />
+                Profile
+              </Button>
+            </Link>
 
             <Link to="/get-help" onClick={() => setIsOpen(false)} className="block mt-3">
               <Button variant="accent" className="w-full rounded-xl h-12 shadow-accent">
