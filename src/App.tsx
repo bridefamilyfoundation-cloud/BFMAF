@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Donate from "./pages/Donate";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
-import Causes from "./pages/Causes";
+import Cases from "./pages/Cases";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Activity from "./pages/Activity";
@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/donate" element={<Donate />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/causes" element={<Causes />} />
+          <Route path="/cases" element={<Cases />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/activity" element={<Activity />} />
