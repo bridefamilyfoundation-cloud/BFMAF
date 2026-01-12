@@ -63,6 +63,7 @@ import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import NewCaseDialog from "@/components/admin/NewCaseDialog";
 
 interface StatsCard {
   title: string;
@@ -799,10 +800,7 @@ const Admin = () => {
                       </span>
                     )}
                   </Button>
-                  <Button variant="hero">
-                    <Plus className="w-4 h-4" />
-                    New Case
-                  </Button>
+                  <NewCaseDialog onCaseCreated={() => fetchDashboardData()} />
                 </div>
               </div>
 

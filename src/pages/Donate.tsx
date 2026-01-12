@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,22 +11,15 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface Cause {
-  id: string;
-  title: string;
-}
-
-const donationAmounts = [25, 50, 100, 250, 500, 1000];
+const donationAmounts = [1000, 5000, 10000, 25000, 50000, 100000];
 
 const Donate = () => {
   const { toast } = useToast();
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(10000);
   const [customAmount, setCustomAmount] = useState("");
   const [donationType, setDonationType] = useState("one-time");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [causes, setCauses] = useState<Cause[]>([]);
-  const [selectedCause, setSelectedCause] = useState<string>("");
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -42,21 +28,8 @@ const Donate = () => {
   });
 
   useEffect(() => {
-    fetchCauses();
     checkAuth();
   }, []);
-
-  const fetchCauses = async () => {
-    const { data } = await supabase
-      .from("causes")
-      .select("id, title")
-      .eq("is_active", true)
-      .order("title");
-    
-    if (data) {
-      setCauses(data);
-    }
-  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -106,11 +79,11 @@ const Donate = () => {
     setIsSubmitting(true);
 
     try {
-      // Create donation record
+      // Create donation record - general fund donation
       const donationData: {
         amount: number;
         is_recurring: boolean;
-        cause_id: string | null;
+        cause_id: null;
         user_id: string | null;
         donor_name: string | null;
         donor_email: string | null;
@@ -118,7 +91,7 @@ const Donate = () => {
       } = {
         amount: finalAmount,
         is_recurring: donationType === "monthly",
-        cause_id: selectedCause || null,
+        cause_id: null,
         user_id: user?.id || null,
         donor_name: user ? null : `${formData.firstName} ${formData.lastName}`,
         donor_email: user ? null : formData.email,
@@ -131,22 +104,6 @@ const Donate = () => {
 
       if (donationError) throw donationError;
 
-      // Update cause raised amount if a cause was selected
-      if (selectedCause) {
-        const { data: causeData } = await supabase
-          .from("causes")
-          .select("raised_amount")
-          .eq("id", selectedCause)
-          .single();
-
-        if (causeData) {
-          await supabase
-            .from("causes")
-            .update({ raised_amount: Number(causeData.raised_amount) + finalAmount })
-            .eq("id", selectedCause);
-        }
-      }
-
       // Log activity if user is logged in
       if (user) {
         await supabase.from("activity_log").insert({
@@ -154,7 +111,7 @@ const Donate = () => {
           action: "donation",
           details: {
             amount: finalAmount,
-            cause_id: selectedCause,
+            type: "general_fund",
             is_recurring: donationType === "monthly",
           },
         });
@@ -193,14 +150,16 @@ const Donate = () => {
                 Thank You!
               </h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Your generous donation of ${finalAmount.toLocaleString()} will help transform lives.
+                Your generous donation of ₦{finalAmount.toLocaleString()} to the General Fund will help transform lives.
                 A confirmation email has been sent to you.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8 italic">
+                "Bear ye one another's burdens, and so fulfil the law of Christ." — Galatians 6:2
               </p>
               <Button variant="hero" onClick={() => {
                 setIsSubmitted(false);
-                setSelectedAmount(100);
+                setSelectedAmount(10000);
                 setCustomAmount("");
-                setSelectedCause("");
               }}>
                 Make Another Donation
               </Button>
@@ -225,38 +184,37 @@ const Donate = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
               <Heart className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-primary">
-                100% of donations go to causes
+                100% goes to helping the community
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Make Your <span className="text-gradient-primary">Donation</span>
+              Support the <span className="text-gradient-primary">Community</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every contribution, no matter the size, creates lasting change in communities around the world.
+              Your donation to the General Fund helps us respond quickly to urgent medical needs across the body of Christ.
+            </p>
+            <p className="text-sm text-muted-foreground italic mt-4">
+              "And whether one member suffer, all the members suffer with it" — 1 Corinthians 12:26
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="grid md:grid-cols-3 gap-8">
             {/* Donation Amount Selection */}
             <div className="md:col-span-2 space-y-8">
-              {/* Select Cause */}
-              <div className="bg-card rounded-2xl p-8 shadow-card">
-                <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
-                  Select a Cause (Optional)
-                </h2>
-                <Select value={selectedCause} onValueChange={setSelectedCause}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a cause to support" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">General Fund</SelectItem>
-                    {causes.map((cause) => (
-                      <SelectItem key={cause.id} value={cause.id}>
-                        {cause.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* General Fund Notice */}
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Heart className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">General Fund Donation</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Your donation goes directly to the BFMAF General Fund, which allows us to allocate resources 
+                      to the most urgent cases and provide immediate assistance to members in need.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-card rounded-2xl p-8 shadow-card">
@@ -312,13 +270,13 @@ const Donate = () => {
                           : "border-border hover:border-primary/50 text-foreground"
                       )}
                     >
-                      ${amount}
+                      ₦{amount.toLocaleString()}
                     </button>
                   ))}
                 </div>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground">
-                    $
+                    ₦
                   </span>
                   <Input
                     type="number"
@@ -408,23 +366,19 @@ const Donate = () => {
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-medium capitalize">{donationType}</span>
                   </div>
-                  {selectedCause && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Cause</span>
-                      <span className="font-medium text-right max-w-[150px] truncate">
-                        {causes.find(c => c.id === selectedCause)?.title || "General"}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fund</span>
+                    <span className="font-medium">General Fund</span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount</span>
-                    <span className="font-medium">${finalAmount.toLocaleString()}</span>
+                    <span className="font-medium">₦{finalAmount.toLocaleString()}</span>
                   </div>
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-lg">
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-primary">
-                        ${finalAmount.toLocaleString()}
+                        ₦{finalAmount.toLocaleString()}
                         {donationType === "monthly" && "/mo"}
                       </span>
                     </div>
