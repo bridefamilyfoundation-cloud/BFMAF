@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CauseCard from "@/components/CauseCard";
+import CaseCard from "@/components/CaseCard";
 import { cn } from "@/lib/utils";
 
 const allCauses = [
@@ -88,10 +88,10 @@ const Causes = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Explore <span className="text-gradient-primary">Causes</span>
+              Explore <span className="text-gradient-primary">Cases</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover meaningful campaigns and find the perfect cause to support. 
+              Discover meaningful campaigns and find the perfect case to support. 
               Every contribution makes a lasting impact.
             </p>
           </div>
@@ -127,7 +127,7 @@ const Causes = () => {
           {/* Results */}
           <div className="mb-6 flex items-center justify-between">
             <p className="text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredCauses.length}</span> causes
+              Showing <span className="font-semibold text-foreground">{filteredCauses.length}</span> cases
             </p>
             <Button variant="ghost" size="sm">
               <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -139,12 +139,12 @@ const Causes = () => {
           {filteredCauses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredCauses.map((cause) => (
-                <CauseCard key={cause.id} {...cause} />
+                <CaseCard key={cause.id} {...cause} />
               ))}
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="text-xl text-muted-foreground mb-4">No causes found</p>
+              <p className="text-xl text-muted-foreground mb-4">No cases found</p>
               <p className="text-muted-foreground">Try adjusting your search or filters</p>
             </div>
           )}

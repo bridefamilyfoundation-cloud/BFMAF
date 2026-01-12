@@ -5,7 +5,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatCounter from "@/components/StatCounter";
-import CauseCard from "@/components/CauseCard";
+import CaseCard from "@/components/CaseCard";
 
 const causes = [
   {
@@ -71,9 +71,9 @@ const Index = () => {
                   <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/causes">
+              <Link to="/cases">
                 <Button variant="outline" size="xl">
-                  Explore Causes
+                  Explore Cases
                 </Button>
               </Link>
             </div>
@@ -114,12 +114,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Causes */}
+      {/* Featured Cases */}
       <section className="py-20 px-4 relative z-10">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Featured <span className="text-gradient-primary">Causes</span>
+              Featured <span className="text-gradient-primary">Cases</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Discover ongoing campaigns that need your support. Every donation, no matter 
@@ -129,14 +129,14 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {causes.map((cause) => (
-              <CauseCard key={cause.id} {...cause} />
+              <CaseCard key={cause.id} {...cause} />
             ))}
           </div>
 
           <div className="text-center mt-12">
-            <Link to="/causes">
+            <Link to="/cases">
               <Button variant="outline" size="lg">
-                View All Causes
+                View All Cases
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -186,8 +186,8 @@ const Index = () => {
             {[
               {
                 step: "01",
-                title: "Choose a Cause",
-                description: "Browse through verified campaigns and find causes that resonate with your values.",
+                title: "Choose a Case",
+                description: "Browse through verified campaigns and find cases that resonate with your values.",
               },
               {
                 step: "02",
