@@ -8,6 +8,10 @@ import Donate from "./pages/Donate";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Causes from "./pages/Causes";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Activity from "./pages/Activity";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +28,10 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/causes" element={<Causes />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/activity" element={<Activity />} />
+          <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
