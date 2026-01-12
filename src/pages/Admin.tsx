@@ -27,6 +27,8 @@ import {
   Phone,
   MapPin,
   Shield,
+  UserCheck,
+  UserX,
   UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,6 +119,8 @@ interface UserProfile {
   address: string | null;
   created_at: string;
   role: string;
+  is_approved: boolean;
+  approved_at: string | null;
 }
 
 interface SiteSettings {
@@ -156,6 +160,8 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [approvingUser, setApprovingUser] = useState(false);
+  const [pendingUsersCount, setPendingUsersCount] = useState(0);
 
   // Settings state
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -227,10 +233,88 @@ const Admin = () => {
       return {
         ...profile,
         role: userRole?.role || "user",
+        is_approved: profile.is_approved ?? false,
+        approved_at: profile.approved_at ?? null,
       };
     });
 
     setUsers(usersWithRoles);
+    setPendingUsersCount(usersWithRoles.filter((u) => !u.is_approved).length);
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    setApprovingUser(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          is_approved: true,
+          approved_at: new Date().toISOString(),
+          approved_by: user?.id,
+        })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      // Log activity
+      await supabase.from("activity_log").insert({
+        user_id: user?.id,
+        action: "user_approved",
+        details: { approved_user_id: userId },
+      });
+
+      toast({
+        title: "User Approved",
+        description: "The member has been approved successfully.",
+      });
+
+      await fetchUsers();
+      setShowUserDialog(false);
+    } catch (error: any) {
+      console.error("Error approving user:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve user",
+        variant: "destructive",
+      });
+    } finally {
+      setApprovingUser(false);
+    }
+  };
+
+  const handleRevokeApproval = async (userId: string) => {
+    setApprovingUser(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          is_approved: false,
+          approved_at: null,
+          approved_by: null,
+        })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Approval Revoked",
+        description: "The member's approval has been revoked.",
+      });
+
+      await fetchUsers();
+      setShowUserDialog(false);
+    } catch (error: any) {
+      console.error("Error revoking approval:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to revoke approval",
+        variant: "destructive",
+      });
+    } finally {
+      setApprovingUser(false);
+    }
   };
 
   const fetchSiteSettings = async () => {
@@ -661,7 +745,7 @@ const Admin = () => {
                   { id: "aid-requests", icon: HandHeart, label: "Aid Requests", badge: pendingCount },
                   { id: "donations", icon: DollarSign, label: "Donations" },
                   { id: "campaigns", icon: Heart, label: "Cases" },
-                  { id: "users", icon: Users, label: "Users" },
+                  { id: "users", icon: Users, label: "Users", badge: pendingUsersCount },
                   { id: "settings", icon: Settings, label: "Settings" },
                 ].map((item) => (
                   <button
@@ -999,6 +1083,7 @@ const Admin = () => {
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">User</th>
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Contact</th>
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Location</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Status</th>
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Role</th>
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Joined</th>
                           <th className="py-3 px-2"></th>
@@ -1052,6 +1137,19 @@ const Admin = () => {
                                 </div>
                               </td>
                               <td className="py-4 px-2">
+                                {user.is_approved ? (
+                                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                    <UserCheck className="w-3 h-3 mr-1" />
+                                    Approved
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    Pending
+                                  </Badge>
+                                )}
+                              </td>
+                              <td className="py-4 px-2">
                                 <Badge
                                   variant={user.role === "admin" ? "default" : "outline"}
                                   className={cn(
@@ -1067,23 +1165,37 @@ const Admin = () => {
                                 {new Date(user.created_at).toLocaleDateString()}
                               </td>
                               <td className="py-4 px-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setShowUserDialog(true);
-                                  }}
-                                >
-                                  <UserCog className="w-4 h-4 mr-1" />
-                                  Manage
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                  {!user.is_approved && (
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() => handleApproveUser(user.user_id)}
+                                      disabled={approvingUser}
+                                    >
+                                      <UserCheck className="w-4 h-4 mr-1" />
+                                      Approve
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setShowUserDialog(true);
+                                    }}
+                                  >
+                                    <UserCog className="w-4 h-4 mr-1" />
+                                    Manage
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}
                         {users.length === 0 && (
                           <tr>
-                            <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                            <td colSpan={7} className="py-8 text-center text-muted-foreground">
                               No users found.
                             </td>
                           </tr>
@@ -1282,6 +1394,31 @@ const Admin = () => {
                 )}
               </div>
 
+              {/* Approval Status */}
+              <div className="space-y-2">
+                <Label>Member Status</Label>
+                <div className="flex items-center gap-3">
+                  {selectedUser.is_approved ? (
+                    <>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                        <UserCheck className="w-3 h-3 mr-1" />
+                        Approved
+                      </Badge>
+                      {selectedUser.approved_at && (
+                        <span className="text-xs text-muted-foreground">
+                          on {new Date(selectedUser.approved_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Pending Approval
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>User Role</Label>
                 <Select
@@ -1301,27 +1438,61 @@ const Admin = () => {
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUserDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="hero"
-              onClick={() => selectedUser && handleUpdateUserRole(selectedUser.user_id, selectedUser.role)}
-              disabled={updatingRole}
-            >
-              {updatingRole ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
-                </>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
+              {!selectedUser?.is_approved ? (
+                <Button
+                  variant="default"
+                  className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                  onClick={() => selectedUser && handleApproveUser(selectedUser.user_id)}
+                  disabled={approvingUser}
+                >
+                  {approvingUser ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserCheck className="w-4 h-4 mr-2" />
+                  )}
+                  Approve Member
+                </Button>
               ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Save Role
-                </>
+                <Button
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10 flex-1 sm:flex-none"
+                  onClick={() => selectedUser && handleRevokeApproval(selectedUser.user_id)}
+                  disabled={approvingUser}
+                >
+                  {approvingUser ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserX className="w-4 h-4 mr-2" />
+                  )}
+                  Revoke Approval
+                </Button>
               )}
-            </Button>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setShowUserDialog(false)} className="flex-1 sm:flex-none">
+                Cancel
+              </Button>
+              <Button
+                variant="hero"
+                onClick={() => selectedUser && handleUpdateUserRole(selectedUser.user_id, selectedUser.role)}
+                disabled={updatingRole}
+                className="flex-1 sm:flex-none"
+              >
+                {updatingRole ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Save Role
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
