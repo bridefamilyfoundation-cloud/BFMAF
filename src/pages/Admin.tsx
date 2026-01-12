@@ -954,28 +954,29 @@ const Admin = () => {
                         </Button>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {campaigns.length > 0 ? (
                           campaigns.slice(0, 5).map((campaign) => {
                             const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
                             return (
-                              <div key={campaign.id} className="p-4 bg-secondary/30 rounded-xl space-y-3">
-                                <div className="flex items-start justify-between gap-4">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-foreground line-clamp-1">{campaign.name}</p>
-                                    <p className="text-sm text-muted-foreground">{campaign.donors} donors</p>
-                                  </div>
+                              <div key={campaign.id} className="p-4 bg-secondary/50 rounded-xl border border-border/50">
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                  <h4 className="font-semibold text-foreground text-base truncate flex-1">{campaign.name}</h4>
                                   <Badge
                                     variant={campaign.status === "active" ? "default" : "secondary"}
-                                    className={campaign.status === "active" ? "bg-success" : ""}
+                                    className={cn(
+                                      "shrink-0 text-xs",
+                                      campaign.status === "active" ? "bg-success text-success-foreground" : ""
+                                    )}
                                   >
-                                    {campaign.status}
+                                    {campaign.status === "active" ? "Active" : "Completed"}
                                   </Badge>
                                 </div>
-                                <Progress value={progress} className="h-2" />
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-primary font-semibold">₦{campaign.raised.toLocaleString()}</span>
-                                  <span className="text-muted-foreground">of ₦{campaign.goal.toLocaleString()}</span>
+                                <p className="text-sm text-muted-foreground mb-3">{campaign.donors} donors</p>
+                                <Progress value={progress} className="h-2.5 mb-2" />
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-primary font-bold">₦{campaign.raised.toLocaleString()}</span>
+                                  <span className="text-muted-foreground font-medium">of ₦{campaign.goal.toLocaleString()}</span>
                                 </div>
                               </div>
                             );
