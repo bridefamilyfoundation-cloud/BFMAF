@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Upload, X, HandHeart, CheckCircle } from "lucide-react";
+import { Loader2, Upload, X, HandHeart, CheckCircle, FileText, Camera, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +29,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const categories = ["Education", "Healthcare", "Emergency", "Community", "General"];
+const categories = ["General", "Surgery", "Chronic Illness", "Emergency", "Medication", "Treatment"];
 const urgencyLevels = [
   { value: "low", label: "Low - Can wait a few weeks" },
   { value: "medium", label: "Medium - Need help within a week" },
@@ -37,15 +37,28 @@ const urgencyLevels = [
 ];
 
 const formSchema = z.object({
+  // Patient Information
+  patientName: z.string().min(2, "Patient name is required").max(100, "Name must be less than 100 characters"),
+  patientAge: z.string().optional(),
+  localChurch: z.string().min(2, "Local church/assembly is required").max(200, "Church name must be less than 200 characters"),
+  
+  // Medical Information
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title must be less than 100 characters"),
-  description: z.string().min(50, "Please provide a detailed description (at least 50 characters)").max(2000, "Description must be less than 2000 characters"),
+  medicalCondition: z.string().min(10, "Please describe the medical condition").max(500, "Description must be less than 500 characters"),
+  medicalHistory: z.string().min(50, "Please provide detailed medical history from onset to current status (at least 50 characters)").max(3000, "Medical history must be less than 3000 characters"),
+  currentStatus: z.string().min(20, "Please describe the current status of the condition").max(1000, "Current status must be less than 1000 characters"),
   category: z.string().min(1, "Please select a category"),
-  goalAmount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Please enter a valid amount"),
   urgency: z.string().min(1, "Please select urgency level"),
-  contactName: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  
+  // Financial Information
+  goalAmount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Please enter a valid amount"),
+  financialBreakdown: z.string().min(20, "Please provide a breakdown of the financial implications").max(2000, "Financial breakdown must be less than 2000 characters"),
+  
+  // Contact Information
+  contactName: z.string().min(2, "Contact name is required").max(100, "Name must be less than 100 characters"),
   contactEmail: z.string().email("Please enter a valid email address"),
-  contactPhone: z.string().optional(),
-  location: z.string().optional(),
+  contactPhone: z.string().min(10, "Please enter a valid phone number"),
+  location: z.string().min(5, "Please provide location details").max(200, "Location must be less than 200 characters"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,11 +75,17 @@ const GetHelp = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      patientName: "",
+      patientAge: "",
+      localChurch: "",
       title: "",
-      description: "",
+      medicalCondition: "",
+      medicalHistory: "",
+      currentStatus: "",
       category: "",
-      goalAmount: "",
       urgency: "medium",
+      goalAmount: "",
+      financialBreakdown: "",
       contactName: "",
       contactEmail: "",
       contactPhone: "",
@@ -79,7 +98,6 @@ const GetHelp = () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
-        // Pre-fill user info if logged in
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
@@ -103,10 +121,10 @@ const GetHelp = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (uploadedImages.length + files.length > 5) {
+    if (uploadedImages.length + files.length > 10) {
       toast({
         title: "Too many images",
-        description: "You can upload a maximum of 5 images",
+        description: "You can upload a maximum of 10 images",
         variant: "destructive",
       });
       return;
@@ -128,7 +146,7 @@ const GetHelp = () => {
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("aid-request-images")
         .upload(fileName, file);
 
@@ -158,31 +176,55 @@ const GetHelp = () => {
   };
 
   const onSubmit = async (values: FormValues) => {
+    if (uploadedImages.length === 0) {
+      toast({
+        title: "Photographs Required",
+        description: "Please upload at least one photograph of the patient",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const description = `
+Patient: ${values.patientName}${values.patientAge ? ` (Age: ${values.patientAge})` : ''}
+Local Church: ${values.localChurch}
+
+Medical Condition: ${values.medicalCondition}
+
+Medical History (from onset to current status):
+${values.medicalHistory}
+
+Current Status:
+${values.currentStatus}
+
+Financial Implications:
+${values.financialBreakdown}
+      `.trim();
+
       const { error } = await supabase.from("aid_requests").insert({
         user_id: user?.id || null,
         title: values.title,
-        description: values.description,
+        description: description,
         category: values.category,
         goal_amount: Number(values.goalAmount),
         urgency: values.urgency,
         contact_name: values.contactName,
         contact_email: values.contactEmail,
-        contact_phone: values.contactPhone || null,
-        location: values.location || null,
+        contact_phone: values.contactPhone,
+        location: values.location,
         image_urls: uploadedImages,
         status: "pending",
       });
 
       if (error) throw error;
 
-      // Log the activity
       await supabase.from("activity_log").insert({
         user_id: user?.id || null,
         action: "aid_request_submitted",
-        details: { title: values.title, category: values.category },
+        details: { title: values.title, category: values.category, patientName: values.patientName },
       });
 
       setIsSuccess(true);
@@ -217,9 +259,12 @@ const GetHelp = () => {
                 Request Submitted!
               </h1>
               <p className="text-muted-foreground mb-8">
-                Thank you for submitting your aid request. Our team will review it
-                and get back to you within 24-48 hours. Once approved, your case
-                will be visible on our platform for donors to support.
+                Thank you for submitting your aid request to the Bride Family Medical Aid Foundation. 
+                Our team will review it and get back to you within 24-48 hours. Once approved, your case
+                will be visible on our platform for the body of Christ to support.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8 italic">
+                "Bear ye one another's burdens, and so fulfil the law of Christ." — Galatians 6:2
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button onClick={() => navigate("/cases")} variant="outline">
@@ -250,22 +295,98 @@ const GetHelp = () => {
               <HandHeart className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Request <span className="text-gradient-primary">Aid</span>
+              Request <span className="text-gradient-primary">Assistance</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tell us about your situation and how we can help. All requests are
-              reviewed by our team before being published.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
+              Tell us about your situation and how the Bride of Christ family can help. 
+              All requests are reviewed by our team before being published.
             </p>
+            <p className="text-sm text-muted-foreground italic">
+              "And whether one member suffer, all the members suffer with it" — 1 Corinthians 12:26
+            </p>
+          </div>
+
+          {/* Requirements Notice */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
+            <h3 className="font-semibold text-foreground mb-3">Requirements for Submission:</h3>
+            <ul className="space-y-2 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <Camera className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span><strong>Photographs</strong> - Clear images of the patient and condition</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span><strong>Medical History</strong> - From onset to current status</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <DollarSign className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span><strong>Financial Implication</strong> - Breakdown of medical management costs</span>
+              </li>
+            </ul>
           </div>
 
           {/* Form */}
           <div className="bg-card rounded-2xl p-6 md:p-8 shadow-card">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Case Details Section */}
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Patient Information Section */}
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold text-foreground border-b border-border pb-2">
-                    Case Details
+                    Patient Information
+                  </h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="patientName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Patient's Full Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Full name of the patient" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="patientAge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Patient's Age</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 45" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="localChurch"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Local Church/Assembly *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Name and location of the patient's local church" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          The patient's local church or assembly
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Medical Information Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-foreground border-b border-border pb-2">
+                    Medical Information
                   </h2>
 
                   <FormField
@@ -276,12 +397,12 @@ const GetHelp = () => {
                         <FormLabel>Case Title *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Help for medical expenses"
+                            placeholder="e.g., Kidney transplant needed for Brother John"
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          A brief, clear title for your aid request
+                          A brief, clear title for the aid request
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -290,20 +411,56 @@ const GetHelp = () => {
 
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="medicalCondition"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Detailed Description *</FormLabel>
+                        <FormLabel>Medical Condition *</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Please describe your situation in detail. Include what happened, why you need help, and how the funds will be used..."
+                            placeholder="Briefly describe the medical condition..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="medicalHistory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Medical History (Onset to Current Status) *</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Please provide a detailed medical history from when the condition started to the current status. Include dates, treatments received, hospitals visited, doctors' diagnoses, etc."
                             className="min-h-[150px]"
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          Provide as much detail as possible to help donors understand your situation
+                          Complete medical history from onset to current status
                         </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="currentStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Medical Status *</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe the current state of the patient's health and what treatment is currently needed..."
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -316,10 +473,7 @@ const GetHelp = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Category *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select category" />
@@ -340,60 +494,39 @@ const GetHelp = () => {
 
                     <FormField
                       control={form.control}
-                      name="goalAmount"
+                      name="urgency"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount Needed ($) *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="0.00"
-                              min="1"
-                              {...field}
-                            />
-                          </FormControl>
+                          <FormLabel>Urgency Level *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select urgency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {urgencyLevels.map((level) => (
+                                <SelectItem key={level.value} value={level.value}>
+                                  {level.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="urgency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Urgency Level *</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select urgency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {urgencyLevels.map((level) => (
-                              <SelectItem key={level.value} value={level.value}>
-                                {level.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
-                {/* Images Section */}
+                {/* Photographs Section */}
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold text-foreground border-b border-border pb-2">
-                    Supporting Images (Optional)
+                    Photographs *
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Upload up to 5 images that help illustrate your situation. Images help donors connect with your story.
+                    Upload clear photographs of the patient. You can upload up to 10 images. 
+                    At least one photograph is required.
                   </p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -414,7 +547,7 @@ const GetHelp = () => {
                       </div>
                     ))}
 
-                    {uploadedImages.length < 5 && (
+                    {uploadedImages.length < 10 && (
                       <label className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
                         {isUploading ? (
                           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -437,6 +570,53 @@ const GetHelp = () => {
                   </div>
                 </div>
 
+                {/* Financial Information Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-foreground border-b border-border pb-2">
+                    Financial Implication
+                  </h2>
+
+                  <FormField
+                    control={form.control}
+                    name="goalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Amount Needed (₦) *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g., 500000"
+                            min="1"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="financialBreakdown"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Financial Breakdown *</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Please provide a detailed breakdown of the financial implications of the medical management. Include costs for surgery, medication, hospital stay, follow-up care, etc."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Detailed breakdown of the financial implications of the medical management
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {/* Contact Information Section */}
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold text-foreground border-b border-border pb-2">
@@ -449,7 +629,7 @@ const GetHelp = () => {
                       name="contactName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name *</FormLabel>
+                          <FormLabel>Contact Person's Name *</FormLabel>
                           <FormControl>
                             <Input placeholder="Your full name" {...field} />
                           </FormControl>
@@ -465,11 +645,7 @@ const GetHelp = () => {
                         <FormItem>
                           <FormLabel>Email Address *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="your@email.com"
-                              {...field}
-                            />
+                            <Input type="email" placeholder="your@email.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -481,9 +657,9 @@ const GetHelp = () => {
                       name="contactPhone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>Phone Number *</FormLabel>
                           <FormControl>
-                            <Input placeholder="+1 (555) 000-0000" {...field} />
+                            <Input placeholder="e.g., 08012345678" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -495,9 +671,9 @@ const GetHelp = () => {
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Location</FormLabel>
+                          <FormLabel>Location *</FormLabel>
                           <FormControl>
-                            <Input placeholder="City, State/Country" {...field} />
+                            <Input placeholder="City, State" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -528,7 +704,7 @@ const GetHelp = () => {
                     )}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground mt-4">
-                    By submitting, you agree that all information provided is accurate.
+                    By submitting, you confirm that all information provided is accurate.
                     Your request will be reviewed within 24-48 hours.
                   </p>
                 </div>
