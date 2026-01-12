@@ -94,14 +94,14 @@ const Cases = () => {
       <FloatingBackground />
       <Navbar />
 
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4">
         <div className="container mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground mb-3 sm:mb-4">
               Explore <span className="text-gradient-primary">Cases</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-4 sm:mb-6 px-2">
               Discover meaningful campaigns and find the perfect case to support.
               Every contribution makes a lasting impact.
             </p>
@@ -117,25 +117,25 @@ const Cases = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-card rounded-2xl p-6 shadow-card mb-8">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+          <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-card mb-6 sm:mb-8">
+            <div className="flex flex-col gap-4">
+              <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search cases..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12"
+                  className="pl-12 h-11 sm:h-12"
                 />
               </div>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
                 {categories.map((category) => (
                   <Button
                     key={category}
                     variant={activeCategory === category ? "hero" : "outline"}
                     size="sm"
                     onClick={() => setActiveCategory(category)}
-                    className="shrink-0"
+                    className="shrink-0 text-xs sm:text-sm"
                   >
                     {category}
                   </Button>
@@ -172,7 +172,7 @@ const Cases = () => {
 
           {/* Cases Grid */}
           {!isLoading && filteredCases.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {filteredCases.map((caseItem) => (
                 <CaseCard
                   key={`${caseItem.source}-${caseItem.id}`}

@@ -55,17 +55,17 @@ const StatCounter = ({ end, suffix = "", prefix = "", duration = 2000, label, ic
     <div
       ref={ref}
       className={cn(
-        "flex flex-col items-center p-6 rounded-2xl bg-card shadow-card hover:shadow-card-hover transition-all duration-300 group",
+        "flex flex-col items-center p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-card shadow-card hover:shadow-card-hover transition-all duration-300 group",
         isVisible ? "animate-count-up" : "opacity-0"
       )}
     >
-      <div className="w-14 h-14 bg-gradient-hero rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-glow">
+      <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-hero rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-4 group-hover:scale-110 transition-transform duration-300 shadow-glow">
         {icon}
       </div>
-      <span className="text-4xl font-serif font-bold text-foreground mb-2">
+      <span className="text-xl sm:text-3xl md:text-4xl font-serif font-bold text-foreground mb-1 sm:mb-2 text-center">
         {prefix}{count.toLocaleString()}{suffix}
       </span>
-      <span className="text-muted-foreground font-medium">{label}</span>
+      <span className="text-xs sm:text-sm text-muted-foreground font-medium text-center">{label}</span>
     </div>
   );
 };
