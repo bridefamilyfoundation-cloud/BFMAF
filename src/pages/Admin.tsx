@@ -947,9 +947,10 @@ const Admin = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => setActiveTab("campaigns")}
+                          className="gap-1.5"
                         >
                           View All Cases
-                          <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
+                          <ArrowUpRight className="w-4 h-4" />
                         </Button>
                       </div>
 
