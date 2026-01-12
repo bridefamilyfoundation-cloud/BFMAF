@@ -8,6 +8,7 @@ import Donate from "./pages/Donate";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Cases from "./pages/Cases";
+import CaseDetail from "./pages/CaseDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Activity from "./pages/Activity";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/cases" element={<Cases />} />
+          <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/activity" element={<Activity />} />
