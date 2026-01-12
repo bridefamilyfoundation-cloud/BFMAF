@@ -36,21 +36,36 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo & Brand */}
           <Link
             to="/"
-            className="flex items-center gap-3 group relative"
+            className="flex items-center gap-2 sm:gap-3 group relative"
           >
-            <div className="relative">
+            <div className="relative shrink-0">
               <div className="absolute inset-0 bg-gradient-hero rounded-xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
               <img
                 src={logo}
                 alt="BFMAF Logo"
                 className={cn(
                   "relative object-contain transition-all duration-300 group-hover:scale-105",
-                  scrolled ? "h-10" : "h-12"
+                  scrolled ? "h-9 sm:h-10" : "h-10 sm:h-12"
                 )}
               />
+            </div>
+            <div className="flex flex-col">
+              <span className={cn(
+                "font-serif font-bold text-foreground leading-tight transition-all duration-300",
+                scrolled ? "text-sm sm:text-base" : "text-base sm:text-lg"
+              )}>
+                <span className="hidden sm:inline">Bride Family Medical Aid</span>
+                <span className="sm:hidden">BFMAF</span>
+              </span>
+              <span className={cn(
+                "text-muted-foreground leading-tight hidden sm:block transition-all duration-300",
+                scrolled ? "text-[10px]" : "text-xs"
+              )}>
+                Foundation
+              </span>
             </div>
           </Link>
 
