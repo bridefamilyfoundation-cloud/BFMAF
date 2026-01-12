@@ -15,16 +15,33 @@ import {
   Settings,
   Bell,
   ChevronDown,
+  HandHeart,
+  Check,
+  X,
+  Eye,
+  Clock,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
@@ -59,6 +76,23 @@ interface Campaign {
   status: string;
 }
 
+interface AidRequest {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  goal_amount: number;
+  urgency: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string | null;
+  location: string | null;
+  image_urls: string[];
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -70,6 +104,14 @@ const Admin = () => {
   const [recentDonations, setRecentDonations] = useState<RecentDonation[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Aid Requests state
+  const [aidRequests, setAidRequests] = useState<AidRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<AidRequest | null>(null);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [adminNotes, setAdminNotes] = useState("");
+  const [processingRequest, setProcessingRequest] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     checkAdminAndFetchData();
@@ -102,7 +144,23 @@ const Admin = () => {
 
     setIsAdmin(true);
     await fetchDashboardData();
+    await fetchAidRequests();
     setLoading(false);
+  };
+
+  const fetchAidRequests = async () => {
+    const { data, error } = await supabase
+      .from("aid_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching aid requests:", error);
+      return;
+    }
+
+    setAidRequests(data || []);
+    setPendingCount(data?.filter(r => r.status === "pending").length || 0);
   };
 
   const fetchDashboardData = async () => {
@@ -127,7 +185,7 @@ const Admin = () => {
     setStatsCards([
       {
         title: "Total Donations",
-        value: `$${totalDonations.toLocaleString()}`,
+        value: `₦${totalDonations.toLocaleString()}`,
         change: "+12.5%",
         trend: "up",
         icon: DollarSign,
@@ -142,7 +200,7 @@ const Admin = () => {
         color: "accent",
       },
       {
-        title: "Active Campaigns",
+        title: "Active Cases",
         value: activeCampaigns.toString(),
         change: `+${activeCampaigns}`,
         trend: "up",
@@ -151,7 +209,7 @@ const Admin = () => {
       },
       {
         title: "Avg. Donation",
-        value: `$${avgDonation}`,
+        value: `₦${avgDonation}`,
         change: "-2.1%",
         trend: "down",
         icon: TrendingUp,
@@ -233,11 +291,159 @@ const Admin = () => {
     }
   };
 
+  const handleViewRequest = (request: AidRequest) => {
+    setSelectedRequest(request);
+    setAdminNotes(request.admin_notes || "");
+    setShowRequestDialog(true);
+  };
+
+  const handleApproveRequest = async () => {
+    if (!selectedRequest) return;
+    setProcessingRequest(true);
+
+    try {
+      // Create a new case in causes table
+      const { error: causeError } = await supabase.from("causes").insert({
+        title: selectedRequest.title,
+        description: selectedRequest.description,
+        category: selectedRequest.category,
+        goal_amount: selectedRequest.goal_amount,
+        raised_amount: 0,
+        image_url: selectedRequest.image_urls?.[0] || null,
+        is_active: true,
+      });
+
+      if (causeError) throw causeError;
+
+      // Update aid request status
+      const { error: updateError } = await supabase
+        .from("aid_requests")
+        .update({
+          status: "approved",
+          admin_notes: adminNotes,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", selectedRequest.id);
+
+      if (updateError) throw updateError;
+
+      // Log activity
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("activity_log").insert({
+        user_id: user?.id,
+        action: "aid_request_approved",
+        details: { request_id: selectedRequest.id, title: selectedRequest.title },
+      });
+
+      toast({
+        title: "Request Approved",
+        description: "The aid request has been approved and a new case has been created.",
+      });
+
+      setShowRequestDialog(false);
+      await fetchAidRequests();
+      await fetchDashboardData();
+    } catch (error: any) {
+      console.error("Error approving request:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve request",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingRequest(false);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    if (!selectedRequest) return;
+    if (!adminNotes.trim()) {
+      toast({
+        title: "Notes Required",
+        description: "Please provide a reason for rejection in the admin notes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProcessingRequest(true);
+
+    try {
+      const { error } = await supabase
+        .from("aid_requests")
+        .update({
+          status: "rejected",
+          admin_notes: adminNotes,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", selectedRequest.id);
+
+      if (error) throw error;
+
+      // Log activity
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("activity_log").insert({
+        user_id: user?.id,
+        action: "aid_request_rejected",
+        details: { request_id: selectedRequest.id, title: selectedRequest.title },
+      });
+
+      toast({
+        title: "Request Rejected",
+        description: "The aid request has been rejected.",
+      });
+
+      setShowRequestDialog(false);
+      await fetchAidRequests();
+    } catch (error: any) {
+      console.error("Error rejecting request:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject request",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingRequest(false);
+    }
+  };
+
   const filteredDonations = recentDonations.filter(
     (d) =>
       d.donor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.campaign.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredRequests = aidRequests.filter(
+    (r) =>
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.contact_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+      case "approved":
+        return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20"><Check className="w-3 h-3 mr-1" /> Approved</Badge>;
+      case "rejected":
+        return <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20"><X className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getUrgencyBadge = (urgency: string) => {
+    switch (urgency) {
+      case "high":
+        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> High</Badge>;
+      case "medium":
+        return <Badge variant="secondary">Medium</Badge>;
+      case "low":
+        return <Badge variant="outline">Low</Badge>;
+      default:
+        return <Badge variant="outline">{urgency}</Badge>;
+    }
+  };
 
   if (loading) {
     return (
@@ -277,8 +483,9 @@ const Admin = () => {
               <nav className="flex-1 space-y-1">
                 {[
                   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+                  { id: "aid-requests", icon: HandHeart, label: "Aid Requests", badge: pendingCount },
                   { id: "donations", icon: DollarSign, label: "Donations" },
-                  { id: "campaigns", icon: Heart, label: "Campaigns" },
+                  { id: "campaigns", icon: Heart, label: "Cases" },
                   { id: "users", icon: Users, label: "Users" },
                   { id: "settings", icon: Settings, label: "Settings" },
                 ].map((item) => (
@@ -286,7 +493,7 @@ const Admin = () => {
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative",
                       activeTab === item.id
                         ? "bg-primary text-primary-foreground shadow-glow"
                         : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -294,6 +501,11 @@ const Admin = () => {
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
                     {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                    {item.badge && item.badge > 0 && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </nav>
@@ -304,86 +516,225 @@ const Admin = () => {
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card rounded-2xl p-6 shadow-card">
                 <div>
-                  <h1 className="text-2xl font-serif font-bold text-foreground">Dashboard</h1>
-                  <p className="text-muted-foreground">Welcome back! Here's what's happening.</p>
+                  <h1 className="text-2xl font-serif font-bold text-foreground">
+                    {activeTab === "aid-requests" ? "Aid Requests" : "Dashboard"}
+                  </h1>
+                  <p className="text-muted-foreground">
+                    {activeTab === "aid-requests" 
+                      ? `Review and manage aid requests. ${pendingCount} pending.`
+                      : "Welcome back! Here's what's happening."
+                    }
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative"
+                    onClick={() => setActiveTab("aid-requests")}
+                  >
                     <Bell className="w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
-                      3
-                    </span>
+                    {pendingCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center">
+                        {pendingCount}
+                      </span>
+                    )}
                   </Button>
                   <Button variant="hero">
                     <Plus className="w-4 h-4" />
-                    New Campaign
+                    New Case
                   </Button>
                 </div>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statsCards.map((stat) => (
-                  <div key={stat.title} className="bg-card rounded-2xl p-6 shadow-card group hover:shadow-card-hover transition-all duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                      <div
-                        className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110",
-                          stat.color === "primary" && "bg-primary/10",
-                          stat.color === "accent" && "bg-accent/10",
-                          stat.color === "success" && "bg-success/10",
-                          stat.color === "warm" && "bg-warm/10"
-                        )}
-                      >
-                        <stat.icon
-                          className={cn(
-                            "w-6 h-6",
-                            stat.color === "primary" && "text-primary",
-                            stat.color === "accent" && "text-accent",
-                            stat.color === "success" && "text-success",
-                            stat.color === "warm" && "text-warm"
-                          )}
-                        />
+              {activeTab === "dashboard" && (
+                <>
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {statsCards.map((stat) => (
+                      <div key={stat.title} className="bg-card rounded-2xl p-6 shadow-card group hover:shadow-card-hover transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                          <div
+                            className={cn(
+                              "w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110",
+                              stat.color === "primary" && "bg-primary/10",
+                              stat.color === "accent" && "bg-accent/10",
+                              stat.color === "success" && "bg-success/10",
+                              stat.color === "warm" && "bg-warm/10"
+                            )}
+                          >
+                            <stat.icon
+                              className={cn(
+                                "w-6 h-6",
+                                stat.color === "primary" && "text-primary",
+                                stat.color === "accent" && "text-accent",
+                                stat.color === "success" && "text-success",
+                                stat.color === "warm" && "text-warm"
+                              )}
+                            />
+                          </div>
+                          <div
+                            className={cn(
+                              "flex items-center gap-1 text-sm font-medium",
+                              stat.trend === "up" ? "text-success" : "text-destructive"
+                            )}
+                          >
+                            {stat.trend === "up" ? (
+                              <ArrowUpRight className="w-4 h-4" />
+                            ) : (
+                              <ArrowDownRight className="w-4 h-4" />
+                            )}
+                            {stat.change}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
+                        <p className="text-2xl font-serif font-bold text-foreground">{stat.value}</p>
                       </div>
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 text-sm font-medium",
-                          stat.trend === "up" ? "text-success" : "text-destructive"
-                        )}
-                      >
-                        {stat.trend === "up" ? (
-                          <ArrowUpRight className="w-4 h-4" />
-                        ) : (
-                          <ArrowDownRight className="w-4 h-4" />
-                        )}
-                        {stat.change}
+                    ))}
+                  </div>
+
+                  {/* Content Grid */}
+                  <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Recent Donations */}
+                    <div className="lg:col-span-2 bg-card rounded-2xl p-6 shadow-card">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-serif font-semibold text-foreground">Recent Donations</h2>
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Search..."
+                              className="pl-9 w-48"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                          </div>
+                          <Button variant="outline" size="icon">
+                            <Filter className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Donor</th>
+                              <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Case</th>
+                              <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Amount</th>
+                              <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Time</th>
+                              <th className="py-3 px-2"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredDonations.length > 0 ? (
+                              filteredDonations.map((donation) => (
+                                <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
+                                  <td className="py-4 px-2">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-medium text-sm">
+                                        {donation.avatar}
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-foreground">{donation.donor}</p>
+                                        <p className="text-sm text-muted-foreground">{donation.email}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-2 text-sm text-muted-foreground">{donation.campaign}</td>
+                                  <td className="py-4 px-2 font-semibold text-primary">₦{donation.amount}</td>
+                                  <td className="py-4 px-2 text-sm text-muted-foreground">{donation.date}</td>
+                                  <td className="py-4 px-2">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                          <MoreVertical className="w-4 h-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                                        <DropdownMenuItem>Send Receipt</DropdownMenuItem>
+                                        <DropdownMenuItem>Contact Donor</DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                                  No donations found.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                    <p className="text-2xl font-serif font-bold text-foreground">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
 
-              {/* Content Grid */}
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Recent Donations */}
-                <div className="lg:col-span-2 bg-card rounded-2xl p-6 shadow-card">
+                    {/* Campaign Progress */}
+                    <div className="bg-card rounded-2xl p-6 shadow-card">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-serif font-semibold text-foreground">Cases</h2>
+                        <Button variant="ghost" size="sm">
+                          View All
+                          <ChevronDown className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-6">
+                        {campaigns.length > 0 ? (
+                          campaigns.map((campaign) => {
+                            const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
+                            return (
+                              <div key={campaign.id} className="space-y-2">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <p className="font-medium text-foreground text-sm line-clamp-1">{campaign.name}</p>
+                                    <p className="text-xs text-muted-foreground">{campaign.donors} donors</p>
+                                  </div>
+                                  <span
+                                    className={cn(
+                                      "px-2 py-0.5 rounded-full text-xs font-medium",
+                                      campaign.status === "active"
+                                        ? "bg-success/10 text-success"
+                                        : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    {campaign.status}
+                                  </span>
+                                </div>
+                                <Progress value={progress} className="h-2" />
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-primary font-medium">₦{campaign.raised.toLocaleString()}</span>
+                                  <span className="text-muted-foreground">₦{campaign.goal.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-muted-foreground text-center py-4">No cases yet.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "aid-requests" && (
+                <div className="bg-card rounded-2xl p-6 shadow-card">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-serif font-semibold text-foreground">Recent Donations</h2>
+                    <h2 className="text-xl font-serif font-semibold text-foreground">Aid Requests</h2>
                     <div className="flex items-center gap-2">
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                          placeholder="Search..."
-                          className="pl-9 w-48"
+                          placeholder="Search requests..."
+                          className="pl-9 w-64"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
                       </div>
-                      <Button variant="outline" size="icon">
-                        <Filter className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
 
@@ -391,51 +742,56 @@ const Admin = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Donor</th>
-                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Campaign</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Request</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Category</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Urgency</th>
                           <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Amount</th>
-                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Time</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Status</th>
+                          <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Date</th>
                           <th className="py-3 px-2"></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredDonations.length > 0 ? (
-                          filteredDonations.map((donation) => (
-                            <tr key={donation.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
+                        {filteredRequests.length > 0 ? (
+                          filteredRequests.map((request) => (
+                            <tr key={request.id} className="border-b last:border-0 hover:bg-secondary/30 transition-colors">
                               <td className="py-4 px-2">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-medium text-sm">
-                                    {donation.avatar}
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-foreground">{donation.donor}</p>
-                                    <p className="text-sm text-muted-foreground">{donation.email}</p>
-                                  </div>
+                                <div>
+                                  <p className="font-medium text-foreground line-clamp-1">{request.title}</p>
+                                  <p className="text-sm text-muted-foreground">{request.contact_name}</p>
                                 </div>
                               </td>
-                              <td className="py-4 px-2 text-sm text-muted-foreground">{donation.campaign}</td>
-                              <td className="py-4 px-2 font-semibold text-primary">${donation.amount}</td>
-                              <td className="py-4 px-2 text-sm text-muted-foreground">{donation.date}</td>
                               <td className="py-4 px-2">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreVertical className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                                    <DropdownMenuItem>Send Receipt</DropdownMenuItem>
-                                    <DropdownMenuItem>Contact Donor</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Badge variant="outline">{request.category}</Badge>
+                              </td>
+                              <td className="py-4 px-2">
+                                {getUrgencyBadge(request.urgency)}
+                              </td>
+                              <td className="py-4 px-2 font-semibold text-primary">
+                                ₦{Number(request.goal_amount).toLocaleString()}
+                              </td>
+                              <td className="py-4 px-2">
+                                {getStatusBadge(request.status)}
+                              </td>
+                              <td className="py-4 px-2 text-sm text-muted-foreground">
+                                {new Date(request.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="py-4 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewRequest(request)}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  Review
+                                </Button>
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                              No donations found.
+                            <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                              No aid requests found.
                             </td>
                           </tr>
                         )}
@@ -443,57 +799,116 @@ const Admin = () => {
                     </table>
                   </div>
                 </div>
-
-                {/* Campaign Progress */}
-                <div className="bg-card rounded-2xl p-6 shadow-card">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-serif font-semibold text-foreground">Campaigns</h2>
-                    <Button variant="ghost" size="sm">
-                      View All
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-6">
-                    {campaigns.length > 0 ? (
-                      campaigns.map((campaign) => {
-                        const progress = campaign.goal > 0 ? (campaign.raised / campaign.goal) * 100 : 0;
-                        return (
-                          <div key={campaign.id} className="space-y-2">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="font-medium text-foreground text-sm line-clamp-1">{campaign.name}</p>
-                                <p className="text-xs text-muted-foreground">{campaign.donors} donors</p>
-                              </div>
-                              <span
-                                className={cn(
-                                  "px-2 py-0.5 rounded-full text-xs font-medium",
-                                  campaign.status === "active"
-                                    ? "bg-success/10 text-success"
-                                    : "bg-muted text-muted-foreground"
-                                )}
-                              >
-                                {campaign.status}
-                              </span>
-                            </div>
-                            <Progress value={progress} className="h-2" />
-                            <div className="flex justify-between text-xs">
-                              <span className="text-primary font-medium">${campaign.raised.toLocaleString()}</span>
-                              <span className="text-muted-foreground">${campaign.goal.toLocaleString()}</span>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-muted-foreground text-center py-4">No campaigns yet.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
             </main>
           </div>
         </div>
       </div>
+
+      {/* Aid Request Review Dialog */}
+      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif">{selectedRequest?.title}</DialogTitle>
+            <DialogDescription className="flex items-center gap-2">
+              Submitted by {selectedRequest?.contact_name} • {selectedRequest?.contact_email}
+              {selectedRequest?.contact_phone && ` • ${selectedRequest.contact_phone}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedRequest && (
+            <div className="space-y-6">
+              {/* Status and Urgency */}
+              <div className="flex items-center gap-4">
+                {getStatusBadge(selectedRequest.status)}
+                {getUrgencyBadge(selectedRequest.urgency)}
+                <Badge variant="outline">{selectedRequest.category}</Badge>
+                {selectedRequest.location && (
+                  <span className="text-sm text-muted-foreground">📍 {selectedRequest.location}</span>
+                )}
+              </div>
+
+              {/* Amount */}
+              <div className="bg-primary/5 rounded-xl p-4">
+                <p className="text-sm text-muted-foreground mb-1">Amount Requested</p>
+                <p className="text-3xl font-bold text-primary">₦{Number(selectedRequest.goal_amount).toLocaleString()}</p>
+              </div>
+
+              {/* Photos */}
+              {selectedRequest.image_urls && selectedRequest.image_urls.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Photographs</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {selectedRequest.image_urls.map((url, index) => (
+                      <a key={index} href={url} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={url}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full aspect-square object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-3">Full Description</h3>
+                <div className="bg-secondary/30 rounded-xl p-4 whitespace-pre-wrap text-sm">
+                  {selectedRequest.description}
+                </div>
+              </div>
+
+              {/* Admin Notes */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-3">Admin Notes</h3>
+                <Textarea
+                  placeholder="Add notes about this request (required for rejection)..."
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  rows={4}
+                  disabled={selectedRequest.status !== "pending"}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowRequestDialog(false)}>
+              Close
+            </Button>
+            {selectedRequest?.status === "pending" && (
+              <>
+                <Button
+                  variant="destructive"
+                  onClick={handleRejectRequest}
+                  disabled={processingRequest}
+                >
+                  {processingRequest ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <X className="w-4 h-4 mr-2" />
+                  )}
+                  Reject
+                </Button>
+                <Button
+                  variant="hero"
+                  onClick={handleApproveRequest}
+                  disabled={processingRequest}
+                >
+                  {processingRequest ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4 mr-2" />
+                  )}
+                  Approve & Create Case
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
