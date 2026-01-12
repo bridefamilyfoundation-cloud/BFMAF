@@ -10,15 +10,27 @@ import Footer from "@/components/Footer";
 import CaseCard from "@/components/CaseCard";
 import { supabase } from "@/integrations/supabase/client";
 
-const categories = ["All", "Education", "Healthcare", "Emergency", "Community", "General"];
+const categories = ["All", "General", "Surgery", "Chronic Illness", "Emergency", "Medication", "Treatment"];
+
+interface CaseItem {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  raised_amount: number;
+  goal_amount: number;
+  category: string;
+  source: "cause" | "aid_request";
+}
 
 const Cases = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const { data: cases = [], isLoading, error } = useQuery({
-    queryKey: ["cases"],
+  // Fetch active causes
+  const { data: causes = [], isLoading: causesLoading } = useQuery({
+    queryKey: ["causes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("causes")
@@ -27,11 +39,49 @@ const Cases = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data.map((c): CaseItem => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        image_url: c.image_url,
+        raised_amount: Number(c.raised_amount),
+        goal_amount: Number(c.goal_amount),
+        category: c.category,
+        source: "cause",
+      }));
     },
   });
 
-  const filteredCases = cases.filter((caseItem) => {
+  // Fetch approved aid requests that haven't been converted to causes yet
+  const { data: aidRequests = [], isLoading: aidLoading } = useQuery({
+    queryKey: ["approved-aid-requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("aid_requests")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data.map((r): CaseItem => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        image_url: r.image_urls?.[0] || null,
+        raised_amount: 0,
+        goal_amount: Number(r.goal_amount),
+        category: r.category,
+        source: "aid_request",
+      }));
+    },
+  });
+
+  const isLoading = causesLoading || aidLoading;
+  
+  // Combine and filter cases
+  const allCases = [...causes, ...aidRequests];
+  
+  const filteredCases = allCases.filter((caseItem) => {
     const matchesSearch =
       caseItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (caseItem.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
@@ -113,25 +163,25 @@ const Cases = () => {
           )}
 
           {/* Error State */}
-          {error && (
+          {!isLoading && allCases.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-xl text-destructive mb-4">Failed to load cases</p>
-              <p className="text-muted-foreground">Please try again later</p>
+              <p className="text-xl text-muted-foreground mb-4">No cases available</p>
+              <p className="text-muted-foreground">Check back later for new cases</p>
             </div>
           )}
 
           {/* Cases Grid */}
-          {!isLoading && !error && filteredCases.length > 0 && (
+          {!isLoading && filteredCases.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredCases.map((caseItem) => (
                 <CaseCard
-                  key={caseItem.id}
+                  key={`${caseItem.source}-${caseItem.id}`}
                   id={caseItem.id}
                   title={caseItem.title}
                   description={caseItem.description || ""}
                   image={caseItem.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop"}
-                  raised={Number(caseItem.raised_amount)}
-                  goal={Number(caseItem.goal_amount)}
+                  raised={caseItem.raised_amount}
+                  goal={caseItem.goal_amount}
                   category={caseItem.category}
                 />
               ))}
@@ -139,7 +189,7 @@ const Cases = () => {
           )}
 
           {/* Empty State */}
-          {!isLoading && !error && filteredCases.length === 0 && (
+          {!isLoading && allCases.length > 0 && filteredCases.length === 0 && (
             <div className="text-center py-16">
               <p className="text-xl text-muted-foreground mb-4">No cases found</p>
               <p className="text-muted-foreground">Try adjusting your search or filters</p>
