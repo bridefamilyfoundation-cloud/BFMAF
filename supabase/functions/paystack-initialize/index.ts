@@ -35,7 +35,7 @@ serve(async (req) => {
         email,
         amount: Math.round(amount * 100), // Paystack expects amount in kobo
         currency: "NGN",
-        callback_url: `${req.headers.get("origin")}/donate?status=success`,
+        callback_url: `${req.headers.get("origin")}/donate`,
         metadata: {
           ...metadata,
           custom_fields: [
