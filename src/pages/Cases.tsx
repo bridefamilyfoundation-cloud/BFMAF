@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FloatingBackground from "@/components/FloatingBackground";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const categories = ["All", "Education", "Healthcare", "Emergency", "Community", "General"];
 
 const Cases = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -49,10 +51,19 @@ const Cases = () => {
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
               Explore <span className="text-gradient-primary">Cases</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
               Discover meaningful campaigns and find the perfect case to support.
               Every contribution makes a lasting impact.
             </p>
+            <Button
+              variant="hero"
+              size="lg"
+              onClick={() => navigate("/get-help")}
+              className="gap-2"
+            >
+              <HandHeart className="w-5 h-5" />
+              Get Help
+            </Button>
           </div>
 
           {/* Filters */}
