@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "welcome" | "donation" | "approval" | "admin_message" | "signup_confirmation";
+  type: "welcome" | "donation" | "approval" | "admin_message" | "signup_confirmation" | "contact_notification" | "contact_response";
   to: string;
   data: {
     name?: string;
@@ -18,6 +18,9 @@ interface EmailRequest {
     caseName?: string;
     message?: string;
     subject?: string;
+    email?: string;
+    originalMessage?: string;
+    response?: string;
   };
 }
 
@@ -181,6 +184,67 @@ const getEmailContent = (type: string, data: EmailRequest["data"]) => {
                 ${data.message || "You have a new message from the administrator."}
               </div>
               <p>If you have any questions, please don't hesitate to reach out to us.</p>
+            </div>
+            <div class="footer">
+              <p>Best regards,<br><strong>The ${tagline} Team</strong></p>
+            </div>
+          </div>
+        `,
+      };
+
+    case "contact_notification":
+      return {
+        subject: `New Contact Message: ${data.subject || "No Subject"}`,
+        html: `
+          ${baseStyles}
+          <div class="container">
+            <div class="header">
+              <h1>New Contact Message 📬</h1>
+              <p>${orgName}</p>
+            </div>
+            <div class="content">
+              <h2>You have a new contact form submission</h2>
+              <div class="highlight">
+                <p><strong>From:</strong> ${data.name || "Unknown"}</p>
+                <p><strong>Email:</strong> ${data.email || "No email"}</p>
+                <p><strong>Subject:</strong> ${data.subject || "No subject"}</p>
+              </div>
+              <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <p><strong>Message:</strong></p>
+                <p style="white-space: pre-wrap;">${data.message || "No message"}</p>
+              </div>
+              <p>Please log in to the admin dashboard to respond to this message.</p>
+            </div>
+            <div class="footer">
+              <p>Admin Notification<br><strong>${tagline}</strong></p>
+            </div>
+          </div>
+        `,
+      };
+
+    case "contact_response":
+      return {
+        subject: `Re: ${data.subject || "Your message to " + orgName}`,
+        html: `
+          ${baseStyles}
+          <div class="container">
+            <div class="header">
+              <h1>${tagline}</h1>
+              <p>${orgName}</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${data.name || "there"},</h2>
+              <p>Thank you for contacting us. Here is our response to your inquiry:</p>
+              <div class="highlight">
+                ${data.response || ""}
+              </div>
+              ${data.originalMessage ? `
+              <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #e5e7eb;">
+                <p><strong>Your original message:</strong></p>
+                <p style="white-space: pre-wrap; color: #6b7280;">${data.originalMessage}</p>
+              </div>
+              ` : ""}
+              <p>If you have any further questions, please don't hesitate to reach out again.</p>
             </div>
             <div class="footer">
               <p>Best regards,<br><strong>The ${tagline} Team</strong></p>

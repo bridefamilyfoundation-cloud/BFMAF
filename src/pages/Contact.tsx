@@ -57,6 +57,24 @@ const Contact = () => {
 
       if (error) throw error;
 
+      // Send notification email to admin
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "contact_notification",
+            to: "bridefamilyfoundation@gmail.com", // Admin email
+            data: {
+              name: formData.name,
+              email: formData.email,
+              subject: formData.subject,
+              message: formData.message,
+            },
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send admin notification:", emailError);
+      }
+
       toast({
         title: "Message Sent!",
         description: "Thank you for reaching out. We'll get back to you soon.",
