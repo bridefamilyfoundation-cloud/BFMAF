@@ -96,26 +96,35 @@ const GetHelp = () => {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // Redirect to auth if not logged in
+      if (!user) {
+        toast({
+          title: "Login Required",
+          description: "Please sign in to request assistance",
+        });
+        navigate("/auth", { state: { returnTo: "/get-help" } });
+        return;
+      }
+      
       setUser(user);
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
 
-        if (profile) {
-          form.setValue("contactName", `${profile.first_name || ""} ${profile.last_name || ""}`.trim());
-          form.setValue("contactEmail", profile.email || user.email || "");
-          form.setValue("contactPhone", profile.phone || "");
-          form.setValue("location", profile.address || "");
-        } else if (user.email) {
-          form.setValue("contactEmail", user.email);
-        }
+      if (profile) {
+        form.setValue("contactName", `${profile.first_name || ""} ${profile.last_name || ""}`.trim());
+        form.setValue("contactEmail", profile.email || user.email || "");
+        form.setValue("contactPhone", profile.phone || "");
+        form.setValue("location", profile.address || "");
+      } else if (user.email) {
+        form.setValue("contactEmail", user.email);
       }
     };
     getUser();
-  }, [form]);
+  }, [form, navigate, toast]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
