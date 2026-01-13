@@ -30,6 +30,8 @@ import {
   UserCheck,
   UserX,
   UserCog,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,6 +139,19 @@ interface SiteSettings {
   scripture_text: string;
 }
 
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string | null;
+  message: string;
+  is_read: boolean;
+  admin_response: string | null;
+  responded_at: string | null;
+  responded_by: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -179,6 +194,14 @@ const Admin = () => {
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
+  // Contact Messages state
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageResponse, setMessageResponse] = useState("");
+  const [sendingResponse, setSendingResponse] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
   useEffect(() => {
     checkAdminAndFetchData();
   }, []);
@@ -213,6 +236,7 @@ const Admin = () => {
     await fetchAidRequests();
     await fetchUsers();
     await fetchSiteSettings();
+    await fetchContactMessages();
     setLoading(false);
   };
 
@@ -350,6 +374,94 @@ const Admin = () => {
         }
       });
       setSiteSettings((prev) => ({ ...prev, ...settings }));
+    }
+  };
+
+  const fetchContactMessages = async () => {
+    const { data, error } = await supabase
+      .from("contact_submissions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching contact messages:", error);
+      return;
+    }
+
+    setContactMessages(data || []);
+    setUnreadMessagesCount(data?.filter((m) => !m.is_read).length || 0);
+  };
+
+  const handleSendResponse = async () => {
+    if (!selectedMessage || !messageResponse.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a response message.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingResponse(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Update the message with response
+      const { error } = await supabase
+        .from("contact_submissions")
+        .update({
+          admin_response: messageResponse,
+          responded_at: new Date().toISOString(),
+          responded_by: user?.id,
+          is_read: true,
+        })
+        .eq("id", selectedMessage.id);
+
+      if (error) throw error;
+
+      // Send email to user
+      await supabase.functions.invoke("send-email", {
+        body: {
+          type: "contact_response",
+          to: selectedMessage.email,
+          data: {
+            name: selectedMessage.name,
+            subject: selectedMessage.subject,
+            originalMessage: selectedMessage.message,
+            response: messageResponse,
+          },
+        },
+      });
+
+      toast({
+        title: "Response Sent",
+        description: "Your response has been sent to the user via email.",
+      });
+
+      await fetchContactMessages();
+      setShowMessageDialog(false);
+      setMessageResponse("");
+    } catch (error: any) {
+      console.error("Error sending response:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send response",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingResponse(false);
+    }
+  };
+
+  const handleMarkAsRead = async (messageId: string) => {
+    try {
+      await supabase
+        .from("contact_submissions")
+        .update({ is_read: true })
+        .eq("id", messageId);
+      await fetchContactMessages();
+    } catch (error) {
+      console.error("Error marking message as read:", error);
     }
   };
 
@@ -758,6 +870,7 @@ const Admin = () => {
                 {[
                   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
                   { id: "aid-requests", icon: HandHeart, label: "Aid Requests", badge: pendingCount },
+                  { id: "messages", icon: MessageSquare, label: "Messages", badge: unreadMessagesCount },
                   { id: "donations", icon: DollarSign, label: "Donations" },
                   { id: "campaigns", icon: Heart, label: "Cases" },
                   { id: "users", icon: Users, label: "Users", badge: pendingUsersCount },
@@ -793,6 +906,7 @@ const Admin = () => {
                   <h1 className="text-2xl font-serif font-bold text-foreground">
                     {activeTab === "dashboard" && "Dashboard"}
                     {activeTab === "aid-requests" && "Aid Requests"}
+                    {activeTab === "messages" && "Contact Messages"}
                     {activeTab === "donations" && "Donations"}
                     {activeTab === "campaigns" && "Cases Management"}
                     {activeTab === "users" && "Users"}
@@ -801,6 +915,7 @@ const Admin = () => {
                   <p className="text-muted-foreground">
                     {activeTab === "dashboard" && "Welcome back! Here's what's happening."}
                     {activeTab === "aid-requests" && `Review and manage aid requests. ${pendingCount} pending.`}
+                    {activeTab === "messages" && `Manage contact form submissions. ${unreadMessagesCount} unread.`}
                     {activeTab === "donations" && "View and manage all donations."}
                     {activeTab === "campaigns" && `Manage all ${campaigns.length} cases.`}
                     {activeTab === "users" && `Manage ${users.length} users. ${pendingUsersCount} pending approval.`}
@@ -1335,6 +1450,133 @@ const Admin = () => {
                 </div>
               )}
 
+              {/* Messages Tab */}
+              {activeTab === "messages" && (
+                <div className="space-y-6">
+                  <div className="bg-card rounded-2xl p-6 shadow-card">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-serif font-semibold text-foreground">Contact Form Submissions</h2>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search messages..."
+                            className="pl-9 w-48"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Status</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">From</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Subject</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Date</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Response</th>
+                            <th className="text-right py-3 px-2 font-medium text-muted-foreground text-sm">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {contactMessages
+                            .filter(
+                              (msg) =>
+                                msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (msg.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
+                            )
+                            .map((message) => (
+                              <tr
+                                key={message.id}
+                                className={cn(
+                                  "border-b hover:bg-secondary/30 transition-colors",
+                                  !message.is_read && "bg-primary/5"
+                                )}
+                              >
+                                <td className="py-4 px-2">
+                                  {!message.is_read ? (
+                                    <Badge className="bg-primary/10 text-primary border-primary/20">
+                                      <Mail className="w-3 h-3 mr-1" /> New
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      <Check className="w-3 h-3 mr-1" /> Read
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="py-4 px-2">
+                                  <div>
+                                    <p className="font-medium text-foreground">{message.name}</p>
+                                    <p className="text-sm text-muted-foreground">{message.email}</p>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-2">
+                                  <p className="text-foreground truncate max-w-[200px]">
+                                    {message.subject || "No subject"}
+                                  </p>
+                                </td>
+                                <td className="py-4 px-2 text-sm text-muted-foreground">
+                                  {new Date(message.created_at).toLocaleDateString()}
+                                </td>
+                                <td className="py-4 px-2">
+                                  {message.admin_response ? (
+                                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                      <Check className="w-3 h-3 mr-1" /> Responded
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                                      <Clock className="w-3 h-3 mr-1" /> Pending
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="py-4 px-2 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    {!message.is_read && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleMarkAsRead(message.id)}
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedMessage(message);
+                                        setMessageResponse(message.admin_response || "");
+                                        setShowMessageDialog(true);
+                                        if (!message.is_read) {
+                                          handleMarkAsRead(message.id);
+                                        }
+                                      }}
+                                    >
+                                      <Send className="w-4 h-4 mr-1" />
+                                      {message.admin_response ? "View" : "Reply"}
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          {contactMessages.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                                No contact messages found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Settings Tab */}
               {activeTab === "settings" && (
                 <div className="space-y-6">
@@ -1726,6 +1968,91 @@ const Admin = () => {
                   Approve & Create Case
                 </Button>
               </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Message Response Dialog */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif">
+              {selectedMessage?.admin_response ? "Message Details" : "Reply to Message"}
+            </DialogTitle>
+            <DialogDescription>
+              From: {selectedMessage?.name} ({selectedMessage?.email})
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedMessage && (
+            <div className="space-y-4">
+              {/* Subject */}
+              <div>
+                <Label className="text-muted-foreground text-sm">Subject</Label>
+                <p className="font-medium text-foreground">
+                  {selectedMessage.subject || "No subject"}
+                </p>
+              </div>
+
+              {/* Original Message */}
+              <div>
+                <Label className="text-muted-foreground text-sm">Original Message</Label>
+                <div className="bg-secondary/30 rounded-xl p-4 whitespace-pre-wrap text-sm mt-1">
+                  {selectedMessage.message}
+                </div>
+              </div>
+
+              {/* Response */}
+              <div>
+                <Label className="text-muted-foreground text-sm">
+                  {selectedMessage.admin_response ? "Your Response" : "Your Response"}
+                </Label>
+                {selectedMessage.admin_response ? (
+                  <div className="bg-primary/5 rounded-xl p-4 whitespace-pre-wrap text-sm mt-1 border border-primary/20">
+                    {selectedMessage.admin_response}
+                  </div>
+                ) : (
+                  <Textarea
+                    placeholder="Type your response here..."
+                    value={messageResponse}
+                    onChange={(e) => setMessageResponse(e.target.value)}
+                    rows={5}
+                    className="mt-1"
+                  />
+                )}
+              </div>
+
+              {selectedMessage.responded_at && (
+                <p className="text-xs text-muted-foreground">
+                  Responded on {new Date(selectedMessage.responded_at).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowMessageDialog(false)}>
+              Close
+            </Button>
+            {!selectedMessage?.admin_response && (
+              <Button
+                variant="hero"
+                onClick={handleSendResponse}
+                disabled={sendingResponse || !messageResponse.trim()}
+              >
+                {sendingResponse ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Response
+                  </>
+                )}
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
