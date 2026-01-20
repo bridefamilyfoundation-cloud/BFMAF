@@ -77,7 +77,7 @@ const Auth = () => {
         email: signupData.email,
         password: signupData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: "https://bfmaf.com/auth",
           data: {
             first_name: signupData.firstName,
             last_name: signupData.lastName,
