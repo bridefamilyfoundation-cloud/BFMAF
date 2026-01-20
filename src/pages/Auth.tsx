@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, Lock, User, ArrowRight, CheckCircle, Heart } from "lucide-react";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
     email: "",
@@ -75,7 +77,7 @@ const Auth = () => {
         email: signupData.email,
         password: signupData.password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             first_name: signupData.firstName,
             last_name: signupData.lastName,
@@ -99,10 +101,20 @@ const Auth = () => {
         sendWelcomeEmail(signupData.email, fullName).catch(console.error);
       }
 
+      // Show success state and switch to login tab after delay
+      setSignupSuccess(true);
       toast({
-        title: "Account Created!",
-        description: "Welcome to BFMAF. Your account is pending approval.",
+        title: "Registration Successful!",
+        description: "Please check your email to confirm your account, then login.",
       });
+
+      // Clear form and switch to login tab after 3 seconds
+      setTimeout(() => {
+        setSignupData({ email: "", password: "", firstName: "", lastName: "" });
+        setSignupSuccess(false);
+        setActiveTab("login");
+      }, 3000);
+      
     } catch (error: unknown) {
       console.error("Signup error:", error);
       toast({
@@ -120,8 +132,15 @@ const Auth = () => {
       <FloatingBackground />
 
       <div className="relative z-10 w-full max-w-md">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-6">
+          <Heart className="w-8 h-8 text-primary" />
+          <span className="text-xl font-serif font-bold text-foreground">
+            Bride Family <span className="text-gradient-primary">Medical Aid</span>
+          </span>
+        </Link>
+        
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl font-serif font-bold text-foreground mb-2">
             Welcome to <span className="text-gradient-primary">BFMAF</span>
           </h1>
           <p className="text-muted-foreground">
@@ -130,7 +149,7 @@ const Auth = () => {
         </div>
 
         <div className="bg-card p-8 rounded-2xl shadow-card">
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -192,6 +211,21 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup">
+              {signupSuccess ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="w-10 h-10 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Registration Successful!</h3>
+                  <p className="text-muted-foreground">
+                    A confirmation email has been sent to your email address. 
+                    Please verify your email to complete registration.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Redirecting to login...
+                  </p>
+                </div>
+              ) : (
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -285,6 +319,7 @@ const Auth = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
+              )}
             </TabsContent>
           </Tabs>
         </div>
