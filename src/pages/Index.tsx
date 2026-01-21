@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import StatCounter from "@/components/StatCounter";
 import CaseCard from "@/components/CaseCard";
 import { supabase } from "@/integrations/supabase/client";
-
+import heroBg from "@/assets/hero-bg.jpg";
 interface Cause {
   id: string;
   title: string;
@@ -105,7 +105,16 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 overflow-hidden">
+      <section 
+        className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 overflow-hidden"
+        style={{
+          backgroundImage: `url(${heroBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full mb-6 sm:mb-8 animate-fade-in">
