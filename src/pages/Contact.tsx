@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -105,6 +106,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Contact Us"
+        description="Get in touch with BFMAF. We're here to help believers facing medical crises. Contact us for assistance or to learn how you can support our mission."
+        url="https://bfmaf.lovable.app/contact"
+      />
       <FloatingBackground />
       <Navbar />
 

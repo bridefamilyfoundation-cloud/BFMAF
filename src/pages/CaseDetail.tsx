@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 
 const CaseDetail = () => {
@@ -82,8 +83,29 @@ const CaseDetail = () => {
   const goal = Number(caseData.goal_amount);
   const progress = goal > 0 ? (raised / goal) * 100 : 0;
 
+  const caseStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: caseData.title,
+    description: caseData.description || "Support this medical case",
+    image: caseData.image_url || "https://bfmaf.lovable.app/favicon.png",
+    datePublished: caseData.created_at,
+    author: {
+      "@type": "Organization",
+      name: "BFMAF",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO 
+        title={caseData.title}
+        description={caseData.description?.slice(0, 155) || "Support this medical case at BFMAF"}
+        image={caseData.image_url || undefined}
+        url={`https://bfmaf.lovable.app/cases/${id}`}
+        type="article"
+        structuredData={caseStructuredData}
+      />
       <FloatingBackground />
       <Navbar />
 

@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatCounter from "@/components/StatCounter";
 import CaseCard from "@/components/CaseCard";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 interface Cause {
@@ -101,6 +102,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO />
       <FloatingBackground />
       <Navbar />
 

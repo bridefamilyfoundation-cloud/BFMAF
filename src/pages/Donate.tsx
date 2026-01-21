@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -479,6 +480,11 @@ const Donate = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO 
+        title="Donate"
+        description="Support believers facing medical crises. Your donation to BFMAF goes directly to helping Christians in need. Make a one-time or recurring donation today."
+        url="https://bfmaf.lovable.app/donate"
+      />
       <FloatingBackground />
       <Navbar />
 

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const values = [
@@ -55,6 +56,11 @@ const howWeHelp = [
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="About Us"
+        description="Learn about BFMAF - A faith-based platform providing prayer, support, and financial aid to Christians facing overwhelming medical conditions."
+        url="https://bfmaf.lovable.app/about"
+      />
       <FloatingBackground />
       <Navbar />
 
