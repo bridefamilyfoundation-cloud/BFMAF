@@ -9,6 +9,7 @@ import StatCounter from "@/components/StatCounter";
 import CaseCard from "@/components/CaseCard";
 import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import heroBg from "@/assets/hero-bg.jpg";
 interface Cause {
   id: string;
@@ -28,6 +29,7 @@ interface SiteStats {
 }
 
 const Index = () => {
+  const { settings: siteSettings, loading: settingsLoading } = useSiteSettings();
   const [causes, setCauses] = useState<Cause[]>([]);
   const [stats, setStats] = useState<SiteStats>({
     totalRaised: 0,
@@ -154,37 +156,39 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 sm:py-20 px-4 relative z-10">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            <StatCounter
-              end={stats.totalRaised}
-              prefix="₦"
-              suffix="+"
-              label="Funds Raised"
-              icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-            />
-            <StatCounter
-              end={stats.totalDonors}
-              suffix="+"
-              label="Donors"
-              icon={<Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-            />
-            <StatCounter
-              end={stats.casesHelped}
-              suffix="+"
-              label="Cases Helped"
-              icon={<Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-            />
-            <StatCounter
-              end={stats.fundsToProgram}
-              suffix="%"
-              label="Funds to Cases"
-              icon={<Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-            />
+      {siteSettings.show_live_stats && (
+        <section className="py-12 sm:py-20 px-4 relative z-10">
+          <div className="container mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              <StatCounter
+                end={stats.totalRaised}
+                prefix="₦"
+                suffix="+"
+                label="Funds Raised"
+                icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
+              />
+              <StatCounter
+                end={stats.totalDonors}
+                suffix="+"
+                label="Donors"
+                icon={<Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
+              />
+              <StatCounter
+                end={stats.casesHelped}
+                suffix="+"
+                label="Cases Helped"
+                icon={<Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
+              />
+              <StatCounter
+                end={siteSettings.funds_to_program || stats.fundsToProgram}
+                suffix="%"
+                label="Funds to Cases"
+                icon={<Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* How We Help Section */}
       <section className="py-12 sm:py-20 px-4 relative z-10 bg-secondary/30">
