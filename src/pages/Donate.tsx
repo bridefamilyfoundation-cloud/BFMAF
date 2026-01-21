@@ -878,6 +878,217 @@ const Donate = () => {
         </div>
       </div>
 
+      {/* Why Donate Section */}
+      <section className="py-16 sm:py-20 px-4 bg-secondary/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-4">
+              Why <span className="text-gradient-primary">Donate?</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your generosity transforms lives and brings hope to believers facing medical crises.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Save Lives</h3>
+              <p className="text-sm text-muted-foreground">
+                Your donation directly funds life-saving medical treatments for believers in crisis.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">100% Transparency</h3>
+              <p className="text-sm text-muted-foreground">
+                Every donation is tracked and reported. Know exactly where your money goes.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Tax Benefits</h3>
+              <p className="text-sm text-muted-foreground">
+                Donations to BFMAF may be tax-deductible. Request a receipt for your records.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Build Community</h3>
+              <p className="text-sm text-muted-foreground">
+                Join a family of believers committed to supporting one another in times of need.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How Funds Are Used Section */}
+      <section className="py-16 sm:py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-6">
+                How Your <span className="text-gradient-primary">Funds Are Used</span>
+              </h2>
+              <p className="text-muted-foreground mb-8">
+                We are committed to being good stewards of every donation. Your contributions go directly 
+                to supporting believers in their time of medical crisis.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    70%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Direct Medical Assistance</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Hospital bills, medications, surgeries, and treatments for verified cases.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    15%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Patient Support Services</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Transportation, accommodation for families, and follow-up care coordination.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-secondary text-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    10%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Case Verification & Outreach</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Ensuring each case is genuine and reaching those who need help most.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-muted text-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    5%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Operations & Technology</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Maintaining our platform and ensuring secure, efficient fund management.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=500&fit=crop"
+                alt="Medical team helping patient"
+                className="rounded-2xl shadow-card-hover w-full"
+              />
+              <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-card hidden sm:block">
+                <div className="text-3xl font-bold text-primary">₦5M+</div>
+                <div className="text-sm text-muted-foreground">Raised for medical cases</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories Section */}
+      <section className="py-16 sm:py-20 px-4 bg-secondary/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-4">
+              Stories of <span className="text-gradient-primary">Hope & Healing</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Real testimonials from believers whose lives were transformed through your generosity.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">MA</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Mrs. Adaeze O.</h4>
+                  <p className="text-xs text-muted-foreground">Kidney Surgery • Lagos</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "When I was diagnosed with kidney failure, my world collapsed. BFMAF not only raised funds 
+                for my surgery but surrounded me with prayers and visits. Today, I'm healthy and back 
+                to serving in my local assembly. God bless every donor!"
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • Surgery successful</span>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">BJ</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Brother James E.</h4>
+                  <p className="text-xs text-muted-foreground">Heart Surgery • Jos</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "I needed urgent heart surgery, and my family had exhausted all resources. The Bride family 
+                came together in a way I never imagined. Within weeks, the funds were raised. I'm alive 
+                today because believers chose to give."
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • Recovered</span>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">SG</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Sister Grace M.</h4>
+                  <p className="text-xs text-muted-foreground">Cancer Treatment • Abuja</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "Facing cancer alone felt impossible, but BFMAF showed me I wasn't alone. The financial 
+                support covered my chemotherapy, and the constant prayers gave me strength to fight. 
+                I'm now in remission. Praise God!"
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • In remission</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mt-10">
+            <p className="text-muted-foreground mb-6 italic">
+              "Bear ye one another's burdens, and so fulfil the law of Christ." — Galatians 6:2
+            </p>
+            <Button variant="hero" size="lg" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <Heart className="w-5 h-5" />
+              Make a Donation
+            </Button>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

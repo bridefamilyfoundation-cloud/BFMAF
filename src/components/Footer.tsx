@@ -58,39 +58,53 @@ const Footer = () => {
             <h4 className="font-serif font-semibold text-lg mb-6">Quick Links</h4>
             <ul className="space-y-3">
               <li>
+                <Link to="/" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Home
+                </Link>
+              </li>
+              <li>
                 <Link to="/about" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
                   About Us
                 </Link>
               </li>
               <li>
+                <Link to="/about#how-it-works" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  How It Works
+                </Link>
+              </li>
+              <li>
                 <Link to="/cases" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  View Cases
+                  Active Cases
                 </Link>
               </li>
               <li>
-                <Link to="/get-help" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Request Assistance
-                </Link>
-              </li>
-              <li>
-                <Link to="/donate" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Donate
+                <Link to="/contact" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Contact
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* How We Help */}
+          {/* Get Involved */}
           <div>
-            <h4 className="font-serif font-semibold text-lg mb-6">How We Help</h4>
+            <h4 className="font-serif font-semibold text-lg mb-6">Get Involved</h4>
             <ul className="space-y-3">
+              <li>
+                <Link to="/get-help" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Request Help
+                </Link>
+              </li>
+              <li>
+                <Link to="/donate" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Support / Donate
+                </Link>
+              </li>
               <li className="text-primary-foreground/70">🙏 Prayers</li>
               <li className="text-primary-foreground/70">👋 Visits</li>
               <li className="text-primary-foreground/70">📞 Calls to Encourage</li>
-              <li className="text-primary-foreground/70">💰 Financial Assistance</li>
-              <li className="text-primary-foreground/70">🏥 Medical Assistance</li>
             </ul>
           </div>
+
 
           {/* Contact */}
           <div>
