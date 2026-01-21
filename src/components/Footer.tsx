@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
 import logo from "@/assets/logo.png";
 import NewsletterSubscribe from "./NewsletterSubscribe";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Footer = () => {
+  const { settings } = useSiteSettings();
+
   return (
     <footer className="bg-foreground text-primary-foreground relative overflow-hidden">
       {/* Decorative shapes */}
@@ -37,9 +40,9 @@ const Footer = () => {
               />
             </Link>
             <p className="text-primary-foreground/70 mb-4 text-sm italic">
-              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
+              "{settings.scripture_text}"
             </p>
-            <p className="text-primary-foreground/50 text-xs mb-6">— 1 Corinthians 12:26</p>
+            <p className="text-primary-foreground/50 text-xs mb-6">— {settings.scripture_reference}</p>
             <div className="flex gap-4">
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground flex items-center justify-center transition-all duration-300">
                 <Facebook className="w-5 h-5" />
@@ -68,7 +71,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/about#how-it-works" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                <Link to="/how-it-works" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
                   How It Works
                 </Link>
               </li>
@@ -113,24 +116,28 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                 <span className="text-primary-foreground/70">
-                  Divine Love Christian Assembly Jos, Longwa Phase II Behind Millennium Hotel Jos
+                  {settings.address}
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-accent shrink-0" />
                 <div className="flex flex-col">
-                  <a href="tel:07032128927" className="text-primary-foreground/70 hover:text-accent transition-colors">
-                    07032128927
-                  </a>
-                  <a href="tel:08036638890" className="text-primary-foreground/70 hover:text-accent transition-colors">
-                    08036638890
-                  </a>
+                  {settings.phone1 && (
+                    <a href={`tel:${settings.phone1}`} className="text-primary-foreground/70 hover:text-accent transition-colors">
+                      {settings.phone1}
+                    </a>
+                  )}
+                  {settings.phone2 && (
+                    <a href={`tel:${settings.phone2}`} className="text-primary-foreground/70 hover:text-accent transition-colors">
+                      {settings.phone2}
+                    </a>
+                  )}
                 </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-accent shrink-0" />
-                <a href="mailto:info@bfmaf.org" className="text-primary-foreground/70 hover:text-accent transition-colors">
-                  info@bfmaf.org
+                <a href={`mailto:${settings.email}`} className="text-primary-foreground/70 hover:text-accent transition-colors">
+                  {settings.email}
                 </a>
               </li>
             </ul>
@@ -139,7 +146,7 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/10 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <p className="text-primary-foreground/50 text-xs sm:text-sm">
-            © {new Date().getFullYear()} Bride Family Medical Aid Foundation. All rights reserved.
+            © {new Date().getFullYear()} {settings.organization_name}. All rights reserved.
           </p>
           <p className="text-primary-foreground/50 text-xs sm:text-sm flex items-center gap-1">
             Made with <Heart className="w-4 h-4 text-accent" /> for the Bride of Christ

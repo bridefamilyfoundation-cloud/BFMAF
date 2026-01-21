@@ -13,6 +13,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://bfmaf.lovable.app/how-it-works</loc>
+    <lastmod>2026-01-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://bfmaf.lovable.app/cases</loc>
     <lastmod>2026-01-21</lastmod>
     <changefreq>daily</changefreq>

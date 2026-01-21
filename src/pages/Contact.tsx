@@ -11,33 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import heroBg from "@/assets/hero-bg.jpg";
-
-const contactInfo = [
-  {
-    icon: MapPin,
-    title: "Address",
-    details: ["Divine Love Christian Assembly Jos", "Longwa Phase II Behind Millennium Hotel Jos"],
-  },
-  {
-    icon: Phone,
-    title: "Phone",
-    details: ["07032128927", "08036638890"],
-  },
-  {
-    icon: Mail,
-    title: "Email",
-    details: ["info@bfmaf.org"],
-  },
-  {
-    icon: Clock,
-    title: "Hours",
-    details: ["Mon - Fri: 9am - 5pm", "Sat: 10am - 2pm"],
-  },
-];
 
 const Contact = () => {
   const { toast } = useToast();
+  const { settings } = useSiteSettings();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -45,6 +24,29 @@ const Contact = () => {
     subject: "",
     message: "",
   });
+
+  const contactInfo = [
+    {
+      icon: MapPin,
+      title: "Address",
+      details: [settings.address],
+    },
+    {
+      icon: Phone,
+      title: "Phone",
+      details: [settings.phone1, settings.phone2].filter(Boolean),
+    },
+    {
+      icon: Mail,
+      title: "Email",
+      details: [settings.email],
+    },
+    {
+      icon: Clock,
+      title: "Hours",
+      details: ["Mon - Fri: 9am - 5pm", "Sat: 10am - 2pm"],
+    },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

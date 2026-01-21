@@ -6,6 +6,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const values = [
@@ -55,6 +56,8 @@ const howWeHelp = [
 ];
 
 const About = () => {
+  const { settings } = useSiteSettings();
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
@@ -83,9 +86,9 @@ const About = () => {
                 About <span className="text-gradient-primary">BFMAF</span>
               </h1>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-4 sm:mb-6 italic px-2">
-                "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
+                "{settings.scripture_text}"
               </p>
-              <p className="text-sm text-primary mb-6 sm:mb-8">— 1 Corinthians 12:26</p>
+              <p className="text-sm text-primary mb-6 sm:mb-8">— {settings.scripture_reference}</p>
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-2">
                 Bride Family Medical Aid Foundation (BFMAF) is a platform borne out of compassion 
                 to reach out to the severely traumatized believers, brothers and sisters who are 
@@ -223,17 +226,14 @@ const About = () => {
           <div className="container mx-auto max-w-4xl text-center">
             <h2 className="text-3xl font-bold text-foreground mb-6">Our Location</h2>
             <p className="text-lg text-muted-foreground mb-4">
-              Divine Love Christian Assembly Jos
-            </p>
-            <p className="text-muted-foreground mb-8">
-              Longwa Phase II Behind Millennium Hotel Jos
+              {settings.address}
             </p>
             <div className="bg-card p-8 rounded-xl shadow-card inline-block">
               <p className="text-foreground font-semibold mb-2">For more information or enquiry:</p>
               <p className="text-primary text-lg">
-                <a href="tel:07032128927" className="hover:underline">07032128927</a>
-                {" or "}
-                <a href="tel:08036638890" className="hover:underline">08036638890</a>
+                {settings.phone1 && <a href={`tel:${settings.phone1}`} className="hover:underline">{settings.phone1}</a>}
+                {settings.phone1 && settings.phone2 && " or "}
+                {settings.phone2 && <a href={`tel:${settings.phone2}`} className="hover:underline">{settings.phone2}</a>}
               </p>
             </div>
           </div>

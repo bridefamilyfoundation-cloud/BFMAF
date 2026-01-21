@@ -137,6 +137,8 @@ interface SiteSettings {
   email: string;
   scripture_reference: string;
   scripture_text: string;
+  show_live_stats: boolean;
+  funds_to_program: number;
 }
 
 interface ContactMessage {
@@ -191,6 +193,8 @@ const Admin = () => {
     email: "info@bfmaf.org",
     scripture_reference: "1 Corinthians 12:26",
     scripture_text: "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it.",
+    show_live_stats: true,
+    funds_to_program: 100,
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -438,8 +442,14 @@ const Admin = () => {
     if (data) {
       const settings: Partial<SiteSettings> = {};
       data.forEach((item) => {
-        if (item.key && item.value) {
-          (settings as any)[item.key] = item.value;
+        if (item.key) {
+          if (item.key === 'show_live_stats') {
+            (settings as any)[item.key] = item.value === true || item.value === 'true';
+          } else if (item.key === 'funds_to_program') {
+            (settings as any)[item.key] = Number(item.value) || 100;
+          } else if (item.value) {
+            (settings as any)[item.key] = item.value;
+          }
         }
       });
       setSiteSettings((prev) => ({ ...prev, ...settings }));
@@ -1906,6 +1916,55 @@ const Admin = () => {
                             }
                             rows={3}
                           />
+                        </div>
+                      </div>
+
+                      {/* Display Settings */}
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-foreground border-b border-border pb-2">Display Settings</h3>
+                        
+                        <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl">
+                          <div>
+                            <Label htmlFor="show_live_stats" className="text-base font-medium">Show Live Donation Stats</Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Display live donation statistics (total raised, donors, cases) on the homepage
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant={siteSettings.show_live_stats ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setSiteSettings({ ...siteSettings, show_live_stats: true })}
+                              className={siteSettings.show_live_stats ? "bg-green-600 hover:bg-green-700" : ""}
+                            >
+                              On
+                            </Button>
+                            <Button
+                              variant={!siteSettings.show_live_stats ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setSiteSettings({ ...siteSettings, show_live_stats: false })}
+                              className={!siteSettings.show_live_stats ? "bg-muted-foreground hover:bg-muted-foreground/90" : ""}
+                            >
+                              Off
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="funds_to_program">Funds to Program (%)</Label>
+                          <Input
+                            id="funds_to_program"
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={siteSettings.funds_to_program}
+                            onChange={(e) =>
+                              setSiteSettings({ ...siteSettings, funds_to_program: Number(e.target.value) })
+                            }
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Percentage of funds that go directly to cases (displayed in stats)
+                          </p>
                         </div>
                       </div>
 
