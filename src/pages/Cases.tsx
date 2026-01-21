@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CaseCard from "@/components/CaseCard";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -112,6 +113,7 @@ const Cases = () => {
       >
         <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
         <div className="container mx-auto relative z-10">
+          <Breadcrumbs />
           {/* Header */}
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground mb-3 sm:mb-4">

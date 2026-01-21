@@ -8,6 +8,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -490,6 +491,7 @@ const Donate = () => {
 
       <div className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-4xl">
+          <Breadcrumbs />
           {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">

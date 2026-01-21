@@ -7,6 +7,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 
 const CaseDetail = () => {
@@ -111,14 +112,8 @@ const CaseDetail = () => {
 
       <div className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4">
         <div className="container mx-auto">
-          {/* Back Button */}
-          <Link
-            to="/cases"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 sm:mb-8 text-sm sm:text-base"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Cases
-          </Link>
+          {/* Breadcrumbs */}
+          <Breadcrumbs customTitle={caseData.title} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content */}
