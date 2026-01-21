@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react";
 import logo from "@/assets/logo.png";
+import NewsletterSubscribe from "./NewsletterSubscribe";
 
 const Footer = () => {
   return (
@@ -10,6 +11,21 @@ const Footer = () => {
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 py-10 sm:py-16 relative z-10">
+        {/* Newsletter Section */}
+        <div className="bg-primary-foreground/5 rounded-2xl p-6 mb-12 border border-primary-foreground/10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h4 className="font-serif font-semibold text-lg mb-1">Subscribe to Our Newsletter</h4>
+              <p className="text-primary-foreground/70 text-sm">
+                Stay updated on our cases, events, and ways you can help.
+              </p>
+            </div>
+            <div className="md:w-96">
+              <NewsletterSubscribe />
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           {/* Brand */}
           <div>
