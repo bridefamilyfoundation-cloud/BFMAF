@@ -120,7 +120,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full mb-4 sm:mb-6 animate-fade-in">
               <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               <span className="text-xs sm:text-sm font-medium text-primary">
-                Faith-Based Medical Assistance
+                Only Believe
               </span>
             </div>
 
