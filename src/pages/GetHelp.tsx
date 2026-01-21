@@ -26,6 +26,7 @@ import {
 import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -293,6 +294,11 @@ ${values.financialBreakdown}
 
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO 
+        title="Get Help"
+        description="Request medical assistance from BFMAF. Submit your case for review and receive prayer, support, and financial aid for overwhelming medical conditions."
+        url="https://bfmaf.lovable.app/get-help"
+      />
       <FloatingBackground />
       <Navbar />
 

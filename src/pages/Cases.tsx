@@ -8,6 +8,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CaseCard from "@/components/CaseCard";
+import SEO from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -92,6 +93,11 @@ const Cases = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <SEO 
+        title="Explore Cases"
+        description="Discover meaningful campaigns and find the perfect case to support. Every contribution makes a lasting impact on believers facing medical crises."
+        url="https://bfmaf.lovable.app/cases"
+      />
       <FloatingBackground />
       <Navbar />
 
