@@ -117,26 +117,21 @@ const Index = () => {
         <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full mb-6 sm:mb-8 animate-fade-in">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full mb-4 sm:mb-6 animate-fade-in">
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               <span className="text-xs sm:text-sm font-medium text-primary">
-                1 Corinthians 12:26
+                Faith-Based Medical Assistance
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 sm:mb-6 animate-slide-up leading-tight">
-              Bride Family{" "}
-              <span className="text-gradient-primary">Medical Aid</span>{" "}
-              Foundation
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 sm:mb-5 animate-slide-up leading-tight">
+              Helping Believers{" "}
+              <span className="text-gradient-primary">Overcome</span>{" "}
+              Medical Crises
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto animate-slide-up delay-100 italic px-2">
-              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
-            </p>
-
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-8 sm:mb-10 max-w-2xl mx-auto animate-slide-up delay-100 px-2">
-              A platform borne out of compassion to reach out to severely traumatized believers 
-              in despair due to overwhelming medical conditions beyond the local church to handle.
+            <p className="text-base sm:text-lg md:text-xl text-foreground/90 mb-6 sm:mb-8 max-w-2xl mx-auto animate-slide-up delay-100 font-medium px-2">
+              We provide prayer, support, and financial aid to Christians facing overwhelming medical conditions.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-slide-up delay-200 px-4 sm:px-0">
