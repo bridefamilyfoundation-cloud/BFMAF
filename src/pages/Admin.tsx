@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import NewCaseDialog from "@/components/admin/NewCaseDialog";
-import { sendApprovalEmail } from "@/lib/email";
+import { sendApprovalEmail, sendAidRequestApprovedEmail, sendAidRequestRejectedEmail, sendNewsletterEmail } from "@/lib/email";
 
 interface StatsCard {
   title: string;
@@ -202,6 +202,12 @@ const Admin = () => {
   const [sendingResponse, setSendingResponse] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
+  // Newsletter state
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<{ id: string; email: string; name: string | null; is_active: boolean; subscribed_at: string }[]>([]);
+  const [newsletterSubject, setNewsletterSubject] = useState("");
+  const [newsletterContent, setNewsletterContent] = useState("");
+  const [sendingNewsletter, setSendingNewsletter] = useState(false);
+
   useEffect(() => {
     checkAdminAndFetchData();
   }, []);
@@ -237,7 +243,70 @@ const Admin = () => {
     await fetchUsers();
     await fetchSiteSettings();
     await fetchContactMessages();
+    await fetchNewsletterSubscribers();
     setLoading(false);
+  };
+
+  const fetchNewsletterSubscribers = async () => {
+    const { data, error } = await supabase
+      .from("newsletter_subscribers")
+      .select("*")
+      .order("subscribed_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching newsletter subscribers:", error);
+      return;
+    }
+
+    setNewsletterSubscribers(data || []);
+  };
+
+  const handleSendNewsletter = async () => {
+    if (!newsletterSubject.trim() || !newsletterContent.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter both subject and content for the newsletter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const activeSubscribers = newsletterSubscribers.filter(s => s.is_active);
+    if (activeSubscribers.length === 0) {
+      toast({
+        title: "No Subscribers",
+        description: "There are no active newsletter subscribers to send to.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingNewsletter(true);
+    try {
+      const emails = activeSubscribers.map(s => s.email);
+      const result = await sendNewsletterEmail(emails, newsletterSubject, newsletterContent);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to send newsletter");
+      }
+
+      toast({
+        title: "Newsletter Sent!",
+        description: `Successfully sent to ${emails.length} subscriber${emails.length > 1 ? 's' : ''}.`,
+      });
+
+      setNewsletterSubject("");
+      setNewsletterContent("");
+    } catch (error: any) {
+      console.error("Error sending newsletter:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send newsletter",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingNewsletter(false);
+    }
   };
 
   const fetchUsers = async () => {
@@ -721,9 +790,17 @@ const Admin = () => {
         details: { request_id: selectedRequest.id, title: selectedRequest.title },
       });
 
+      // Send approval email to the requester
+      sendAidRequestApprovedEmail(
+        selectedRequest.contact_email,
+        selectedRequest.contact_name,
+        selectedRequest.title,
+        adminNotes || undefined
+      ).catch(console.error);
+
       toast({
         title: "Request Approved",
-        description: "The aid request has been approved and a new case has been created.",
+        description: "The aid request has been approved and the requester has been notified via email.",
       });
 
       setShowRequestDialog(false);
@@ -774,9 +851,17 @@ const Admin = () => {
         details: { request_id: selectedRequest.id, title: selectedRequest.title },
       });
 
+      // Send rejection email to the requester
+      sendAidRequestRejectedEmail(
+        selectedRequest.contact_email,
+        selectedRequest.contact_name,
+        selectedRequest.title,
+        adminNotes
+      ).catch(console.error);
+
       toast({
         title: "Request Rejected",
-        description: "The aid request has been rejected.",
+        description: "The aid request has been rejected and the requester has been notified via email.",
       });
 
       setShowRequestDialog(false);
@@ -874,6 +959,7 @@ const Admin = () => {
                   { id: "donations", icon: DollarSign, label: "Donations" },
                   { id: "campaigns", icon: Heart, label: "Cases" },
                   { id: "users", icon: Users, label: "Users", badge: pendingUsersCount },
+                  { id: "newsletter", icon: Mail, label: "Newsletter" },
                   { id: "settings", icon: Settings, label: "Settings" },
                 ].map((item) => (
                   <button
@@ -910,6 +996,7 @@ const Admin = () => {
                     {activeTab === "donations" && "Donations"}
                     {activeTab === "campaigns" && "Cases Management"}
                     {activeTab === "users" && "Users"}
+                    {activeTab === "newsletter" && "Newsletter"}
                     {activeTab === "settings" && "Settings"}
                   </h1>
                   <p className="text-muted-foreground">
@@ -919,6 +1006,7 @@ const Admin = () => {
                     {activeTab === "donations" && "View and manage all donations."}
                     {activeTab === "campaigns" && `Manage all ${campaigns.length} cases.`}
                     {activeTab === "users" && `Manage ${users.length} users. ${pendingUsersCount} pending approval.`}
+                    {activeTab === "newsletter" && `Send newsletters to ${newsletterSubscribers.filter(s => s.is_active).length} subscribers.`}
                     {activeTab === "settings" && "Configure website settings."}
                   </p>
                 </div>
@@ -1573,6 +1661,124 @@ const Admin = () => {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Newsletter Tab */}
+              {activeTab === "newsletter" && (
+                <div className="space-y-6">
+                  {/* Compose Newsletter */}
+                  <div className="bg-card rounded-2xl p-6 shadow-card">
+                    <h2 className="text-xl font-serif font-semibold text-foreground mb-6">
+                      Send Newsletter
+                    </h2>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="newsletter-subject">Subject</Label>
+                        <Input
+                          id="newsletter-subject"
+                          placeholder="Newsletter subject..."
+                          value={newsletterSubject}
+                          onChange={(e) => setNewsletterSubject(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="newsletter-content">Content</Label>
+                        <Textarea
+                          id="newsletter-content"
+                          placeholder="Write your newsletter content here..."
+                          value={newsletterContent}
+                          onChange={(e) => setNewsletterContent(e.target.value)}
+                          rows={10}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          Will be sent to {newsletterSubscribers.filter(s => s.is_active).length} active subscriber(s)
+                        </p>
+                        <Button
+                          variant="hero"
+                          onClick={handleSendNewsletter}
+                          disabled={sendingNewsletter || !newsletterSubject.trim() || !newsletterContent.trim()}
+                        >
+                          {sendingNewsletter ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Send Newsletter
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subscribers List */}
+                  <div className="bg-card rounded-2xl p-6 shadow-card">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-serif font-semibold text-foreground">
+                        Subscribers ({newsletterSubscribers.length})
+                      </h2>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                        {newsletterSubscribers.filter(s => s.is_active).length} Active
+                      </Badge>
+                    </div>
+                    
+                    {newsletterSubscribers.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="font-medium text-foreground mb-2">No Subscribers Yet</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Subscribers will appear here when people sign up for the newsletter.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-border">
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Email</th>
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Name</th>
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                              <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Subscribed</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {newsletterSubscribers.map((subscriber) => (
+                              <tr key={subscriber.id} className="border-b border-border/50 last:border-0">
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-foreground">{subscriber.email}</span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-foreground">{subscriber.name || "-"}</span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {subscriber.is_active ? (
+                                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                      Active
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-muted text-muted-foreground">
+                                      Unsubscribed
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-muted-foreground">
+                                    {new Date(subscriber.subscribed_at).toLocaleDateString()}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
