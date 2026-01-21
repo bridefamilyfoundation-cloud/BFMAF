@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const values = [
@@ -75,21 +76,24 @@ const About = () => {
           }}
         >
           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
-          <div className="container mx-auto max-w-4xl text-center relative z-10">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-              About <span className="text-gradient-primary">BFMAF</span>
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-4 sm:mb-6 italic px-2">
-              "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
-            </p>
-            <p className="text-sm text-primary mb-6 sm:mb-8">— 1 Corinthians 12:26</p>
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-2">
-              Bride Family Medical Aid Foundation (BFMAF) is a platform borne out of compassion 
-              to reach out to the severely traumatized believers, brothers and sisters who are 
-              in despair due to prolonged or acute conditions that is overwhelming to the 
-              individual, family and local church — conditions beyond the local church to handle. 
-              Hence the need for the Bride of Christ as a Family to reach out for assistance!
-            </p>
+          <div className="container mx-auto max-w-4xl relative z-10">
+            <Breadcrumbs />
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
+                About <span className="text-gradient-primary">BFMAF</span>
+              </h1>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-4 sm:mb-6 italic px-2">
+                "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it."
+              </p>
+              <p className="text-sm text-primary mb-6 sm:mb-8">— 1 Corinthians 12:26</p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed px-2">
+                Bride Family Medical Aid Foundation (BFMAF) is a platform borne out of compassion 
+                to reach out to the severely traumatized believers, brothers and sisters who are 
+                in despair due to prolonged or acute conditions that is overwhelming to the 
+                individual, family and local church — conditions beyond the local church to handle. 
+                Hence the need for the Bride of Christ as a Family to reach out for assistance!
+              </p>
+            </div>
           </div>
         </section>
 
@@ -131,7 +135,7 @@ const About = () => {
         </section>
 
         {/* How We Help Section */}
-        <section className="py-12 sm:py-20 px-4">
+        <section id="how-it-works" className="py-12 sm:py-20 px-4 scroll-mt-24">
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3 sm:mb-4">How We Help</h2>
             <p className="text-muted-foreground text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base px-2">

@@ -27,6 +27,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -304,6 +305,7 @@ ${values.financialBreakdown}
 
       <div className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-3xl">
+          <Breadcrumbs />
           {/* Header */}
           <div className="text-center mb-12">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">

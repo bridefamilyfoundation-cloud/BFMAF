@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -126,6 +127,7 @@ const Contact = () => {
         >
           <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
           <div className="container mx-auto max-w-4xl text-center relative z-10">
+            <Breadcrumbs />
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Get in <span className="text-gradient-primary">Touch</span>
             </h1>
