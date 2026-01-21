@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Button } from "@/components/ui/button";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const values = [
   {
@@ -59,8 +60,16 @@ const About = () => {
 
       <main className="relative z-10">
         {/* Hero Section */}
-        <section className="py-12 sm:py-20 px-4 pt-24 sm:pt-32">
-          <div className="container mx-auto max-w-4xl text-center">
+        <section 
+          className="relative py-12 sm:py-20 px-4 pt-24 sm:pt-32"
+          style={{
+            backgroundImage: `url(${heroBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+          <div className="container mx-auto max-w-4xl text-center relative z-10">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
               About <span className="text-gradient-primary">BFMAF</span>
             </h1>

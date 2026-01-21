@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CaseCard from "@/components/CaseCard";
 import { supabase } from "@/integrations/supabase/client";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const categories = ["All", "General", "Surgery", "Chronic Illness", "Emergency", "Medication", "Treatment"];
 
@@ -94,10 +95,19 @@ const Cases = () => {
       <FloatingBackground />
       <Navbar />
 
-      <div className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4">
-        <div className="container mx-auto">
+      {/* Hero Section with Background */}
+      <section 
+        className="relative pt-24 sm:pt-32 pb-12 sm:pb-16 px-4"
+        style={{
+          backgroundImage: `url(${heroBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+        <div className="container mx-auto relative z-10">
           {/* Header */}
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground mb-3 sm:mb-4">
               Explore <span className="text-gradient-primary">Cases</span>
             </h1>
@@ -115,7 +125,11 @@ const Cases = () => {
               Get Help
             </Button>
           </div>
+        </div>
+      </section>
 
+      <div className="pb-16 sm:pb-20 px-4">
+        <div className="container mx-auto">
           {/* Filters */}
           <div className="bg-card rounded-2xl p-4 sm:p-6 shadow-card mb-6 sm:mb-8">
             <div className="flex flex-col gap-4">
