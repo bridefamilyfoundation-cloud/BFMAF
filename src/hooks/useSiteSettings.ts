@@ -22,7 +22,7 @@ const defaultSettings: SiteSettings = {
   address: "Divine Love Christian Assembly Jos, Longwa Phase II Behind Millennium Hotel Jos",
   phone1: "07032128927",
   phone2: "08036638890",
-  email: "info@bfmaf.org",
+  email: "info@bfmaf.com",
   scripture_reference: "1 Corinthians 12:26",
   scripture_text: "And whether one member suffer, all the members suffer with it, or one member be honored, all the members rejoice with it.",
   show_live_stats: true,
