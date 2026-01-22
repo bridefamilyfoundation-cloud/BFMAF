@@ -1,7 +1,8 @@
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 
 interface CaseCardProps {
   id: string;
@@ -15,16 +16,24 @@ interface CaseCardProps {
 
 const CaseCard = ({ id, title, description, image, raised, goal, category }: CaseCardProps) => {
   const progress = (raised / goal) * 100;
+  const fallbackImage = "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop";
+  const { url: signedUrl, loading: imageLoading } = useSignedUrl(image, fallbackImage);
 
   return (
     <Link to={`/cases/${id}`} className="block">
       <div className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2">
         <div className="relative h-40 sm:h-48 overflow-hidden">
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
+          {imageLoading ? (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <img
+              src={signedUrl || fallbackImage}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+          )}
           <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
             <span className="px-2.5 py-1 sm:px-3 bg-primary/90 text-primary-foreground text-xs font-semibold rounded-full backdrop-blur-sm">
               {category}

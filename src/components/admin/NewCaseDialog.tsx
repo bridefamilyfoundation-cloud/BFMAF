@@ -29,6 +29,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import ImagePreview from "@/components/ImagePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -107,11 +108,8 @@ const NewCaseDialog = ({ onCaseCreated }: NewCaseDialogProps) => {
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("aid-request-images")
-        .getPublicUrl(fileName);
-
-      newImageUrls.push(publicUrl);
+      // Store the file path instead of public URL for security
+      newImageUrls.push(fileName);
     }
 
     setUploadedImages((prev) => [...prev, ...newImageUrls]);
@@ -264,21 +262,14 @@ const NewCaseDialog = ({ onCaseCreated }: NewCaseDialogProps) => {
               
               {uploadedImages.length > 0 && (
                 <div className="grid grid-cols-5 gap-2">
-                  {uploadedImages.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Case image ${index + 1}`}
-                        className="w-full h-20 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
+                  {uploadedImages.map((filePath, index) => (
+                    <ImagePreview
+                      key={index}
+                      filePath={filePath}
+                      index={index}
+                      onRemove={removeImage}
+                      className="h-20"
+                    />
                   ))}
                 </div>
               )}

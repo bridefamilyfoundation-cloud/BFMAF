@@ -28,6 +28,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ImagePreview from "@/components/ImagePreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -171,11 +172,8 @@ const GetHelp = () => {
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("aid-request-images")
-        .getPublicUrl(fileName);
-
-      newImageUrls.push(publicUrl);
+      // Store the file path instead of public URL for security
+      newImageUrls.push(fileName);
     }
 
     setUploadedImages((prev) => [...prev, ...newImageUrls]);
@@ -547,21 +545,14 @@ ${values.financialBreakdown}
                   </p>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                    {uploadedImages.map((url, index) => (
-                      <div key={index} className="relative aspect-square">
-                        <img
-                          src={url}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
+                    {uploadedImages.map((filePath, index) => (
+                      <ImagePreview
+                        key={index}
+                        filePath={filePath}
+                        index={index}
+                        onRemove={removeImage}
+                        className="aspect-square"
+                      />
                     ))}
 
                     {uploadedImages.length < 10 && (

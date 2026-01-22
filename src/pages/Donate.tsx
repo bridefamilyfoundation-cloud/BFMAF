@@ -250,7 +250,8 @@ const Donate = () => {
         const { data: urlData } = supabase.storage
           .from("aid-request-images")
           .getPublicUrl(filePath);
-        proofUrl = urlData.publicUrl;
+        // Store the path for internal use (signed URLs will be used for display)
+        proofUrl = filePath;
       }
 
       // Record the donation as pending for bank transfer
