@@ -328,6 +328,133 @@ export type Database = {
         }
         Relationships: []
       }
+      success_stories: {
+        Row: {
+          condition: string
+          created_at: string
+          featured_quote: string | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          location: string | null
+          patient_name: string
+          status: string
+          story_content: string
+          title: string
+          treatment: string
+          updated_at: string
+        }
+        Insert: {
+          condition: string
+          created_at?: string
+          featured_quote?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          location?: string | null
+          patient_name: string
+          status?: string
+          story_content: string
+          title: string
+          treatment: string
+          updated_at?: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          featured_quote?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          location?: string | null
+          patient_name?: string
+          status?: string
+          story_content?: string
+          title?: string
+          treatment?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          author_name: string
+          author_role: string
+          created_at: string
+          id: string
+          is_published: boolean
+          quote: string
+          sort_order: number
+          story_id: string | null
+        }
+        Insert: {
+          author_name: string
+          author_role: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          quote: string
+          sort_order?: number
+          story_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          quote?: string
+          sort_order?: number
+          story_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "success_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_updates: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          sort_order: number
+          story_id: string
+          title: string
+          update_date: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          sort_order?: number
+          story_id: string
+          title: string
+          update_date: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          sort_order?: number
+          story_id?: string
+          title?: string
+          update_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_updates_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "success_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
