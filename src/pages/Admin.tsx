@@ -68,6 +68,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import NewCaseDialog from "@/components/admin/NewCaseDialog";
 import SuccessStoriesManager from "@/components/admin/SuccessStoriesManager";
+import AdminImage from "@/components/admin/AdminImage";
 import { sendApprovalEmail, sendAidRequestApprovedEmail, sendAidRequestRejectedEmail, sendNewsletterEmail } from "@/lib/email";
 
 interface StatsCard {
@@ -2177,14 +2178,13 @@ const Admin = () => {
                 <div>
                   <h3 className="font-semibold text-foreground mb-3">Photographs</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {selectedRequest.image_urls.map((url, index) => (
-                      <a key={index} href={url} target="_blank" rel="noopener noreferrer">
-                        <img
-                          src={url}
-                          alt={`Photo ${index + 1}`}
-                          className="w-full aspect-square object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
-                        />
-                      </a>
+                    {selectedRequest.image_urls.map((filePath, index) => (
+                      <AdminImage
+                        key={index}
+                        filePath={filePath}
+                        alt={`Photo ${index + 1}`}
+                        className="w-full aspect-square object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
+                      />
                     ))}
                   </div>
                 </div>

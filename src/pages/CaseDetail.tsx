@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,13 +84,15 @@ const CaseDetail = () => {
   const raised = Number(caseData.raised_amount);
   const goal = Number(caseData.goal_amount);
   const progress = goal > 0 ? (raised / goal) * 100 : 0;
+  const fallbackImage = "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop";
+  const { url: signedImageUrl, loading: imageLoading } = useSignedUrl(caseData.image_url, fallbackImage);
 
   const caseStructuredData = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: caseData.title,
     description: caseData.description || "Support this medical case",
-    image: caseData.image_url || "https://bfmaf.lovable.app/favicon.png",
+    image: signedImageUrl || "https://bfmaf.lovable.app/favicon.png",
     datePublished: caseData.created_at,
     author: {
       "@type": "Organization",
@@ -102,7 +105,7 @@ const CaseDetail = () => {
       <SEO 
         title={caseData.title}
         description={caseData.description?.slice(0, 155) || "Support this medical case at BFMAF"}
-        image={caseData.image_url || undefined}
+        image={signedImageUrl || undefined}
         url={`https://bfmaf.lovable.app/cases/${id}`}
         type="article"
         structuredData={caseStructuredData}
@@ -120,11 +123,17 @@ const CaseDetail = () => {
             <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               {/* Hero Image */}
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden">
-                <img
-                  src={caseData.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop"}
-                  alt={caseData.title}
-                  className="w-full h-[250px] sm:h-[350px] lg:h-[400px] object-cover"
-                />
+                {imageLoading ? (
+                  <div className="w-full h-[250px] sm:h-[350px] lg:h-[400px] bg-muted flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <img
+                    src={signedImageUrl || fallbackImage}
+                    alt={caseData.title}
+                    className="w-full h-[250px] sm:h-[350px] lg:h-[400px] object-cover"
+                  />
+                )}
                 <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
                   <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/90 text-primary-foreground text-xs sm:text-sm font-semibold rounded-full backdrop-blur-sm">
                     {caseData.category}
