@@ -1,4 +1,4 @@
-import { Heart, Users, Target, Award, ArrowRight, BookOpen, Phone, HandHeart } from "lucide-react";
+import { Heart, Users, Target, Award, ArrowRight, BookOpen, Phone, HandHeart, History, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -53,6 +53,15 @@ const howWeHelp = [
     title: "Financial & Medical Assistance",
     description: "Providing tangible support for medical expenses when conditions are beyond the local church to handle.",
   },
+];
+
+const boardMembers = [
+  { name: "Bro Ezekiel Ekka", role: "Chairman" },
+  { name: "Bro Emperor Ayuba", role: "Secretary" },
+  { name: "Bro Joseph Adesida", role: "Trustee" },
+  { name: "Bro Joseph Anzaku", role: "Trustee" },
+  { name: "Bro Moses Ayuba", role: "Trustee" },
+  { name: "Bro Luke A Ekka", role: "Media" },
 ];
 
 const About = () => {
@@ -133,6 +142,73 @@ const About = () => {
                   <div className="text-xs sm:text-sm text-muted-foreground">Bride Family Medical Aid</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* History Section */}
+        <section className="py-12 sm:py-20 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <History className="h-8 w-8 text-primary" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Our History</h2>
+            </div>
+            <div className="bg-card p-6 sm:p-8 rounded-xl shadow-card space-y-4 text-muted-foreground text-sm sm:text-base leading-relaxed">
+              <p>
+                After the National Youth retreat of 1st – 3rd November 2024, while in Bro Emperor's office 
+                reflecting on the results of the meeting, we were struck by the absence of a young gifted 
+                singer and musician, <strong className="text-foreground">Bro Joseph Bala</strong>, who was absent 
+                due to a spinal condition that led to paralysis of his two legs.
+              </p>
+              <p>
+                We discussed extensively how we could render assistance. The idea was related to our Pastor 
+                who supported and encouraged us. Pastor Lily was consulted, and she suggested making it a 
+                <strong className="text-foreground"> Bride of Christ Family affair</strong> involving believers 
+                who have compassion. The idea of having a foundation registered was born.
+              </p>
+              <p>
+                The idea was shared with Bro Moses Ayuba, Bro Joseph Adesida, Bro Joseph Anzaku, and Bro Luke A Ekka. 
+                They all embraced it and started making contributions while the company registration process was ongoing.
+              </p>
+              <p>
+                Meanwhile, in Kaduna, the hospital Bro Joseph Bala was attending suggested surgery costing 
+                ₦4.5 million with only a 50% chance of success. After series of meetings, we concluded to 
+                pursue alternative/Chinese care. A treatment center in Jos was identified.
+              </p>
+              <p>
+                Bro Joseph Bala, his father, and Pastor were consulted. They all accepted the offer. 
+                <strong className="text-foreground"> On the 24th March 2025, Bro Joseph Bala arrived in Jos</strong> 
+                and has since been receiving Acupressure, Hydrotherapy, special diet, and other treatments.
+              </p>
+              <p className="text-foreground font-medium italic border-l-4 border-primary pl-4 mt-6">
+                We want to thank God for the progress so far. We thank Pastor Ebere Isaac, Pastor Lily Udeh, 
+                and the Board of Trustees for their advice, contributions, and prompt response when the need arises. 
+                May God richly bless you all.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Board of Trustees Section */}
+        <section className="py-12 sm:py-16 px-4 bg-secondary/30">
+          <div className="container mx-auto max-w-4xl">
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <UserCheck className="h-8 w-8 text-primary" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Board of Trustees</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+              {boardMembers.map((member, index) => (
+                <div
+                  key={index}
+                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card text-center hover:shadow-card-hover transition-shadow"
+                >
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                  </div>
+                  <h3 className="text-sm sm:text-lg font-semibold text-foreground">{member.name}</h3>
+                  <p className="text-xs sm:text-sm text-primary">{member.role}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
