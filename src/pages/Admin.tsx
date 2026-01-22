@@ -32,6 +32,7 @@ import {
   UserCog,
   MessageSquare,
   Send,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import NewCaseDialog from "@/components/admin/NewCaseDialog";
+import SuccessStoriesManager from "@/components/admin/SuccessStoriesManager";
 import { sendApprovalEmail, sendAidRequestApprovedEmail, sendAidRequestRejectedEmail, sendNewsletterEmail } from "@/lib/email";
 
 interface StatsCard {
@@ -968,6 +970,7 @@ const Admin = () => {
                   { id: "messages", icon: MessageSquare, label: "Messages", badge: unreadMessagesCount },
                   { id: "donations", icon: DollarSign, label: "Donations" },
                   { id: "campaigns", icon: Heart, label: "Cases" },
+                  { id: "success-stories", icon: BookOpen, label: "Stories" },
                   { id: "users", icon: Users, label: "Users", badge: pendingUsersCount },
                   { id: "newsletter", icon: Mail, label: "Newsletter" },
                   { id: "settings", icon: Settings, label: "Settings" },
@@ -1005,6 +1008,7 @@ const Admin = () => {
                     {activeTab === "messages" && "Contact Messages"}
                     {activeTab === "donations" && "Donations"}
                     {activeTab === "campaigns" && "Cases Management"}
+                    {activeTab === "success-stories" && "Success Stories"}
                     {activeTab === "users" && "Users"}
                     {activeTab === "newsletter" && "Newsletter"}
                     {activeTab === "settings" && "Settings"}
@@ -1015,6 +1019,7 @@ const Admin = () => {
                     {activeTab === "messages" && `Manage contact form submissions. ${unreadMessagesCount} unread.`}
                     {activeTab === "donations" && "View and manage all donations."}
                     {activeTab === "campaigns" && `Manage all ${campaigns.length} cases.`}
+                    {activeTab === "success-stories" && "Manage success stories, timelines, and testimonials."}
                     {activeTab === "users" && `Manage ${users.length} users. ${pendingUsersCount} pending approval.`}
                     {activeTab === "newsletter" && `Send newsletters to ${newsletterSubscribers.filter(s => s.is_active).length} subscribers.`}
                     {activeTab === "settings" && "Configure website settings."}
@@ -1673,6 +1678,11 @@ const Admin = () => {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Success Stories Tab */}
+              {activeTab === "success-stories" && (
+                <SuccessStoriesManager />
               )}
 
               {/* Newsletter Tab */}
