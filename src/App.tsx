@@ -16,6 +16,7 @@ import Activity from "./pages/Activity";
 import Auth from "./pages/Auth";
 import GetHelp from "./pages/GetHelp";
 import HowItWorks from "./pages/HowItWorks";
+import SuccessStories from "./pages/SuccessStories";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/get-help" element={<GetHelp />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/success-stories" element={<SuccessStories />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
