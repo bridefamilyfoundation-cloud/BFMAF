@@ -107,12 +107,79 @@ const Contact = () => {
     }));
   };
 
+  const faqs = [
+    {
+      q: "How can I request medical assistance?",
+      a: "You can submit your request through our 'Get Help' page. You'll need to provide photographs, your medical history from onset to current status, and the financial implications of the medical management.",
+    },
+    {
+      q: "Who is eligible for assistance?",
+      a: "We reach out to believers, brothers and sisters who are in despair due to prolonged or acute medical conditions that are overwhelming to the individual, family, and local church.",
+    },
+    {
+      q: "How do you verify cases?",
+      a: "All submitted cases are reviewed by our admin team. We verify the medical documentation and may contact the local church or medical providers for confirmation.",
+    },
+    {
+      q: "How can I donate to help someone?",
+      a: "You can donate through our Donate page. You can choose to give to a specific case or to the general fund which helps multiple cases.",
+    },
+  ];
+
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
+      },
+    })),
+  };
+
+  const localBusinessData = {
+    "@context": "https://schema.org",
+    "@type": "NonprofitOrganization",
+    name: "Bride Family Medical Aid Foundation",
+    alternateName: "BFMAF",
+    url: "https://bfmaf.lovable.app",
+    logo: "https://bfmaf.lovable.app/favicon.png",
+    image: "https://bfmaf.lovable.app/og-image.png",
+    description: "Faith-based medical assistance for believers facing overwhelming medical conditions.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: settings.address,
+      addressLocality: "Jos",
+      addressRegion: "Plateau State",
+      addressCountry: "NG",
+    },
+    telephone: settings.phone1,
+    email: settings.email,
+    openingHours: "Mo-Fr 09:00-17:00, Sa 10:00-14:00",
+    sameAs: [
+      "https://facebook.com/BFMAF",
+      "https://twitter.com/BFMAF",
+      "https://instagram.com/BFMAF",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: settings.phone1,
+      contactType: "customer service",
+      availableLanguage: "English",
+    },
+  };
+
+  const combinedStructuredData = [faqStructuredData, localBusinessData];
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
         title="Contact Us"
         description="Get in touch with BFMAF. We're here to help believers facing medical crises. Contact us for assistance or to learn how you can support our mission."
         url="https://bfmaf.lovable.app/contact"
+        structuredData={combinedStructuredData}
       />
       <FloatingBackground />
       <Navbar />
@@ -267,24 +334,7 @@ const Contact = () => {
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
-              {[
-                {
-                  q: "How can I request medical assistance?",
-                  a: "You can submit your request through our 'Get Help' page. You'll need to provide photographs, your medical history from onset to current status, and the financial implications of the medical management.",
-                },
-                {
-                  q: "Who is eligible for assistance?",
-                  a: "We reach out to believers, brothers and sisters who are in despair due to prolonged or acute medical conditions that are overwhelming to the individual, family, and local church.",
-                },
-                {
-                  q: "How do you verify cases?",
-                  a: "All submitted cases are reviewed by our admin team. We verify the medical documentation and may contact the local church or medical providers for confirmation.",
-                },
-                {
-                  q: "How can I donate to help someone?",
-                  a: "You can donate through our Donate page. You can choose to give to a specific case or to the general fund which helps multiple cases.",
-                },
-              ].map((faq, index) => (
+              {faqs.map((faq, index) => (
                 <div key={index} className="bg-card p-6 rounded-xl shadow-card">
                   <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
                   <p className="text-muted-foreground">{faq.a}</p>
