@@ -8,6 +8,9 @@ interface SEOProps {
   url?: string;
   type?: "website" | "article" | "product";
   structuredData?: object;
+  robots?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 const defaultMeta = {
@@ -26,6 +29,9 @@ const SEO = ({
   url = defaultMeta.url,
   type = "website",
   structuredData,
+  robots = "index, follow",
+  publishedTime,
+  modifiedTime,
 }: SEOProps) => {
   const fullTitle = title 
     ? `${title} | BFMAF` 
@@ -62,8 +68,15 @@ const SEO = ({
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
       <meta name="author" content="BFMAF" />
-      <meta name="robots" content="index, follow" />
+      <meta name="robots" content={robots} />
       <link rel="canonical" href={url} />
+      
+      {/* Additional SEO Tags */}
+      <meta name="googlebot" content={robots} />
+      <meta name="bingbot" content={robots} />
+      <meta httpEquiv="content-language" content="en" />
+      <meta name="geo.region" content="NG" />
+      <meta name="geo.placename" content="Jos, Nigeria" />
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
@@ -73,6 +86,8 @@ const SEO = ({
       <meta property="og:image" content={absoluteImage} />
       <meta property="og:site_name" content="BFMAF" />
       <meta property="og:locale" content="en_US" />
+      {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+      {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
