@@ -18,7 +18,7 @@ const defaultMeta = {
   description: "Faith-based medical assistance for believers facing overwhelming medical conditions. We provide prayer, support, and financial aid to Christians in medical crises.",
   keywords: "medical aid, christian charity, faith-based assistance, medical fundraising, healthcare support, medical bills help, christian foundation, medical crisis support",
   image: "/og-image.png",
-  url: "https://bfmaf.lovable.app",
+  url: "https://bfmaf.com",
 };
 
 const SEO = ({
