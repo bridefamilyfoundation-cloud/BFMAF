@@ -27,7 +27,7 @@ Disallow: /activity
 Disallow: /auth
 
 # Sitemap location
-Sitemap: https://bfmaf.com/sitemap.xml
+Sitemap: https://bfmaf.lovable.app/sitemap.xml
 
 # Crawl-delay for polite crawling
 Crawl-delay: 1
