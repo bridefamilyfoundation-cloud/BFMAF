@@ -1,0 +1,1098 @@
+import { useState, useEffect, useRef } from "react";
+import { Heart, CreditCard, Shield, CheckCircle, Building2, Landmark, Copy, Check, Upload, XCircle, AlertCircle, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import FloatingBackground from "@/components/FloatingBackground";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
+
+type PaymentStatus = "idle" | "success" | "cancelled" | "failed";
+
+const donationAmounts = [1000, 5000, 10000, 25000, 50000, 100000];
+
+const bankDetails = {
+  bankName: "First Bank of Nigeria",
+  accountName: "BFMAF Foundation",
+  accountNumber: "1234567890",
+};
+
+const Donate = () => {
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(10000);
+  const [customAmount, setCustomAmount] = useState("");
+  const [donationType, setDonationType] = useState("one-time");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank">("card");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    checkAuth();
+    
+    // Check for payment status from Paystack redirect
+    const status = searchParams.get("status");
+    const reference = searchParams.get("reference");
+    const trxref = searchParams.get("trxref");
+    
+    // Clear URL params after reading
+    if (status || reference || trxref) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("status");
+      newParams.delete("reference");
+      newParams.delete("trxref");
+      setSearchParams(newParams, { replace: true });
+    }
+    
+    if (reference || trxref) {
+      verifyPayment(reference || trxref || "");
+    } else if (status === "cancelled") {
+      setPaymentStatus("cancelled");
+    }
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setUser({ id: session.user.id, email: session.user.email || "" });
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      
+      if (profile) {
+        setFormData({
+          firstName: profile.first_name || "",
+          lastName: profile.last_name || "",
+          email: profile.email || session.user.email || "",
+        });
+      }
+    }
+  };
+
+  const verifyPayment = async (reference: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("paystack-verify", {
+        body: { reference },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setPaymentStatus("success");
+        setSelectedAmount(data.amount);
+      } else {
+        setPaymentStatus("failed");
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      setPaymentStatus("failed");
+    }
+  };
+
+  const handleProofFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setProofFile(file);
+      setProofPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeProofFile = () => {
+    setProofFile(null);
+    setProofPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAmountClick = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount("");
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value);
+    setSelectedAmount(null);
+  };
+
+  const copyToClipboard = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+    toast({
+      title: "Copied!",
+      description: `${field} copied to clipboard`,
+    });
+  };
+
+  const finalAmount = selectedAmount || Number(customAmount) || 0;
+
+  const handlePaystackPayment = async () => {
+    if (finalAmount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please select or enter a donation amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("paystack-initialize", {
+        body: {
+          email: formData.email,
+          amount: finalAmount,
+          metadata: {
+            donor_name: `${formData.firstName} ${formData.lastName}`.trim() || "Anonymous",
+            donation_type: donationType,
+            user_id: user?.id || null,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.data?.authorization_url) {
+        // Redirect to Paystack checkout
+        window.location.href = data.data.authorization_url;
+      } else {
+        throw new Error("Failed to get payment URL");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBankTransferSubmit = async () => {
+    if (finalAmount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please select or enter a donation amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setIsUploadingProof(true);
+
+    try {
+      let proofUrl: string | null = null;
+
+      // Upload proof of payment if provided
+      if (proofFile) {
+        const fileExt = proofFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `payment-proofs/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("aid-request-images")
+          .upload(filePath, proofFile);
+
+        if (uploadError) {
+          console.error("Proof upload error:", uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload proof of payment. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("aid-request-images")
+          .getPublicUrl(filePath);
+        // Store the path for internal use (signed URLs will be used for display)
+        proofUrl = filePath;
+      }
+
+      // Record the donation as pending for bank transfer
+      const donationData = {
+        amount: finalAmount,
+        is_recurring: donationType === "monthly",
+        cause_id: null,
+        user_id: user?.id || null,
+        donor_name: user ? null : `${formData.firstName} ${formData.lastName}`,
+        donor_email: user ? null : formData.email,
+        status: "pending", // Bank transfers start as pending
+      };
+
+      const { error: donationError } = await supabase
+        .from("donations")
+        .insert(donationData);
+
+      if (donationError) throw donationError;
+
+      if (user) {
+        await supabase.from("activity_log").insert({
+          user_id: user.id,
+          action: "donation_initiated",
+          details: {
+            amount: finalAmount,
+            type: "general_fund",
+            payment_method: "bank_transfer",
+            is_recurring: donationType === "monthly",
+            proof_url: proofUrl,
+          },
+        });
+      }
+
+      setIsSubmitted(true);
+      setPaymentStatus("success");
+    } catch (error) {
+      console.error("Donation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process donation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setIsUploadingProof(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (paymentMethod === "card") {
+      await handlePaystackPayment();
+    } else {
+      await handleBankTransferSubmit();
+    }
+  };
+
+  // Payment Status Feedback Screens
+  if (paymentStatus === "success" || isSubmitted) {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <FloatingBackground />
+        <Navbar />
+        
+        <div className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="bg-card rounded-3xl p-12 shadow-card text-center">
+              <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="w-10 h-10 text-success" />
+              </div>
+              <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
+                {paymentMethod === "bank" ? "Transfer Initiated!" : "Payment Successful!"}
+              </h1>
+              <p className="text-lg text-foreground mb-8">
+                {paymentMethod === "bank" ? (
+                  <>
+                    Please complete your transfer of <strong>₦{finalAmount.toLocaleString()}</strong> to the General Fund.
+                    <br />
+                    <span className="text-muted-foreground">Your donation will be confirmed once we receive it.</span>
+                  </>
+                ) : (
+                  <>
+                    Your generous donation of <strong>₦{finalAmount.toLocaleString()}</strong> to the General Fund will help transform lives.
+                    <br />
+                    <span className="text-muted-foreground">A confirmation email has been sent to you.</span>
+                  </>
+                )}
+              </p>
+              
+              {paymentMethod === "bank" && (
+                <div className="bg-secondary/50 rounded-2xl p-6 mb-8 text-left">
+                  <h3 className="font-semibold text-foreground mb-4">Bank Transfer Details:</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Bank Name:</span>
+                      <span className="font-semibold text-foreground">{bankDetails.bankName}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Account Name:</span>
+                      <span className="font-semibold text-foreground">{bankDetails.accountName}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Account Number:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground font-mono">{bankDetails.accountNumber}</span>
+                        <button
+                          onClick={() => copyToClipboard(bankDetails.accountNumber, "Account Number")}
+                          className="p-1 hover:bg-secondary rounded"
+                        >
+                          {copiedField === "Account Number" ? (
+                            <Check className="w-4 h-4 text-success" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Amount:</span>
+                      <span className="font-bold text-primary">₦{finalAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground mb-8 italic">
+                "Bear ye one another's burdens, and so fulfil the law of Christ." — Galatians 6:2
+              </p>
+              <Button variant="hero" onClick={() => {
+                setIsSubmitted(false);
+                setPaymentStatus("idle");
+                setSelectedAmount(10000);
+                setCustomAmount("");
+                setProofFile(null);
+                setProofPreview(null);
+              }}>
+                Make Another Donation
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentStatus === "cancelled") {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <FloatingBackground />
+        <Navbar />
+        
+        <div className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="bg-card rounded-3xl p-12 shadow-card text-center">
+              <div className="w-20 h-20 bg-warm/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-10 h-10 text-warm" />
+              </div>
+              <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
+                Payment Cancelled
+              </h1>
+              <p className="text-lg text-foreground mb-8">
+                Your payment was cancelled. Don't worry, you can try again whenever you're ready.
+                <br />
+                <span className="text-muted-foreground">No charges have been made to your account.</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="hero" onClick={() => setPaymentStatus("idle")}>
+                  Try Again
+                </Button>
+                <Button variant="outline" onClick={() => window.location.href = "/"}>
+                  Return Home
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentStatus === "failed") {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <FloatingBackground />
+        <Navbar />
+        
+        <div className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="bg-card rounded-3xl p-12 shadow-card text-center">
+              <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <XCircle className="w-10 h-10 text-destructive" />
+              </div>
+              <h1 className="text-4xl font-serif font-bold text-foreground mb-4">
+                Payment Failed
+              </h1>
+              <p className="text-lg text-foreground mb-8">
+                We couldn't verify your payment. This could be due to insufficient funds, network issues, or card restrictions.
+                <br />
+                <span className="text-muted-foreground">Please try again or use a different payment method.</span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="hero" onClick={() => setPaymentStatus("idle")}>
+                  Try Again
+                </Button>
+                <Button variant="outline" onClick={() => {
+                  setPaymentStatus("idle");
+                  setPaymentMethod("bank");
+                }}>
+                  Use Bank Transfer
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-6">
+                Need help? Contact us at <a href="mailto:support@bfmaf.org" className="text-primary hover:underline font-medium">support@bfmaf.org</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background relative">
+      <SEO 
+        title="Donate"
+        description="Support believers facing medical crises. Your donation to BFMAF goes directly to helping Christians in need. Make a one-time or recurring donation today."
+        url="https://bfmaf.lovable.app/donate"
+      />
+      <FloatingBackground />
+      <Navbar />
+
+      <div className="pt-32 pb-20 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <Breadcrumbs />
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
+              <Heart className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                100% goes to helping the community
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+              Support the <span className="text-gradient-primary">Community</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Your donation to the General Fund helps us respond quickly to urgent medical needs across the body of Christ.
+            </p>
+            <p className="text-sm text-muted-foreground italic mt-4">
+              "And whether one member suffer, all the members suffer with it" — 1 Corinthians 12:26
+            </p>
+          </div>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Donation Amount Selection */}
+            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
+              {/* General Fund Notice */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1 sm:mb-2 text-sm sm:text-base">General Fund Donation</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">
+                      Your donation goes directly to the BFMAF General Fund, which allows us to allocate resources 
+                      to the most urgent cases and provide immediate assistance to members in need.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
+                  Select Donation Type
+                </h2>
+                <RadioGroup
+                  value={donationType}
+                  onValueChange={setDonationType}
+                  className="flex flex-col sm:flex-row gap-3 sm:gap-4"
+                >
+                  <Label
+                    htmlFor="one-time"
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
+                      donationType === "one-time"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <RadioGroupItem value="one-time" id="one-time" />
+                    <span className="font-medium text-sm sm:text-base">One-time</span>
+                  </Label>
+                  <Label
+                    htmlFor="monthly"
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300",
+                      donationType === "monthly"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <RadioGroupItem value="monthly" id="monthly" />
+                    <span className="font-medium text-sm sm:text-base">Monthly</span>
+                  </Label>
+                </RadioGroup>
+              </div>
+
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
+                  Choose Amount
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                  {donationAmounts.map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => handleAmountClick(amount)}
+                      className={cn(
+                        "p-3 sm:p-4 rounded-xl border-2 font-semibold text-base sm:text-lg transition-all duration-300",
+                        selectedAmount === amount
+                          ? "border-primary bg-primary text-primary-foreground shadow-glow"
+                          : "border-border hover:border-primary/50 text-foreground"
+                      )}
+                    >
+                      ₦{amount.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground">
+                    ₦
+                  </span>
+                  <Input
+                    type="number"
+                    placeholder="Enter custom amount"
+                    value={customAmount}
+                    onChange={(e) => handleCustomAmountChange(e.target.value)}
+                    className="pl-8 h-14 text-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
+                  Personal Information
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <Label htmlFor="firstName" className="text-sm">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      className="mt-1.5 sm:mt-2"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName" className="text-sm">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      className="mt-1.5 sm:mt-2"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="email" className="text-sm">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john@example.com"
+                      className="mt-1.5 sm:mt-2"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method Selection */}
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card">
+                <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground mb-4 sm:mb-6">
+                  Select Payment Method
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={cn(
+                      "p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 text-left",
+                      paymentMethod === "card"
+                        ? "border-primary bg-primary/5 shadow-glow"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className={cn(
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
+                        paymentMethod === "card" ? "bg-primary text-primary-foreground" : "bg-secondary"
+                      )}>
+                        <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Card Payment</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Pay securely with Paystack</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 sm:mt-4 flex items-center gap-2">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Mastercard-logo.png/200px-Mastercard-logo.png" alt="Mastercard" className="h-5 sm:h-6 object-contain" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" alt="Visa" className="h-5 sm:h-6 object-contain" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Verve-logo.svg/200px-Verve-logo.svg.png" alt="Verve" className="h-3 sm:h-4 object-contain" />
+                    </div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("bank")}
+                    className={cn(
+                      "p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 text-left",
+                      paymentMethod === "bank"
+                        ? "border-primary bg-primary/5 shadow-glow"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className={cn(
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
+                        paymentMethod === "bank" ? "bg-primary text-primary-foreground" : "bg-secondary"
+                      )}>
+                        <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Bank Transfer</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Direct deposit to our account</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 sm:mt-4">
+                      <span className="text-xs text-muted-foreground">All Nigerian banks supported</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bank Transfer Details */}
+              {paymentMethod === "bank" && (
+                <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-card border-2 border-dashed border-primary/30">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                    <h2 className="text-lg sm:text-xl font-serif font-semibold text-foreground">
+                      Bank Transfer Details
+                    </h2>
+                  </div>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
+                      <div>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Bank Name</span>
+                        <p className="font-semibold text-foreground text-sm sm:text-base">{bankDetails.bankName}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Account Name</span>
+                        <p className="font-semibold text-foreground text-sm sm:text-base truncate">{bankDetails.accountName}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(bankDetails.accountName, "Account Name")}
+                        className="p-2 hover:bg-secondary rounded-lg transition-colors shrink-0 ml-2"
+                      >
+                        {copiedField === "Account Name" ? (
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
+                        ) : (
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-secondary/50 rounded-xl">
+                      <div>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Account Number</span>
+                        <p className="font-semibold text-foreground font-mono text-base sm:text-lg">{bankDetails.accountNumber}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(bankDetails.accountNumber, "Account Number")}
+                        className="p-2 hover:bg-secondary rounded-lg transition-colors shrink-0"
+                      >
+                        {copiedField === "Account Number" ? (
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
+                        ) : (
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="p-3 sm:p-4 bg-primary/10 rounded-xl border border-primary/20">
+                      <p className="text-xs sm:text-sm text-foreground">
+                        <strong>Note:</strong> Please use your email address as the transfer reference/narration so we can identify your donation.
+                      </p>
+                    </div>
+
+                    {/* Proof of Payment Upload */}
+                    <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border">
+                      <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+                        <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base">Upload Proof of Payment</h3>
+                        <span className="text-xs text-muted-foreground">(Optional)</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                        Upload a screenshot of your transfer receipt to speed up verification.
+                      </p>
+                      
+                      {proofPreview ? (
+                        <div className="relative">
+                          <img
+                            src={proofPreview}
+                            alt="Proof of payment"
+                            className="w-full max-h-40 sm:max-h-48 object-contain rounded-xl border border-border"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeProofFile}
+                            className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:bg-primary/5 transition-colors">
+                          <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-primary/50 mb-2" />
+                          <span className="text-xs sm:text-sm text-muted-foreground">Click to upload proof</span>
+                          <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleProofFileChange}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card lg:sticky lg:top-28">
+                <h3 className="text-base sm:text-lg font-serif font-semibold text-foreground mb-4 sm:mb-6">
+                  Donation Summary
+                </h3>
+
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-muted-foreground">Type</span>
+                    <span className="font-medium capitalize">{donationType}</span>
+                  </div>
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-muted-foreground">Fund</span>
+                    <span className="font-medium">General Fund</span>
+                  </div>
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-muted-foreground">Payment Method</span>
+                    <span className="font-medium capitalize text-right">
+                      {paymentMethod === "card" ? "Card (Paystack)" : "Bank Transfer"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-medium">₦{finalAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="border-t pt-3 sm:pt-4">
+                    <div className="flex justify-between text-base sm:text-lg">
+                      <span className="font-semibold">Total</span>
+                      <span className="font-bold text-primary">
+                        ₦{finalAmount.toLocaleString()}
+                        {donationType === "monthly" && "/mo"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="accent"
+                  size="lg"
+                  className="w-full text-sm sm:text-base"
+                  disabled={finalAmount === 0 || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    "Processing..."
+                  ) : paymentMethod === "card" ? (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      Pay with Paystack
+                    </>
+                  ) : (
+                    <>
+                      <Heart className="w-4 h-4" />
+                      Confirm Bank Transfer
+                    </>
+                  )}
+                </Button>
+
+                <div className="mt-4 sm:mt-6 flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                  <Shield className="w-4 h-4 text-success shrink-0" />
+                  <span>Secure 256-bit SSL encryption</span>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Why Donate Section */}
+      <section className="py-16 sm:py-20 px-4 bg-secondary/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-4">
+              Why <span className="text-gradient-primary">Donate?</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your generosity transforms lives and brings hope to believers facing medical crises.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Save Lives</h3>
+              <p className="text-sm text-muted-foreground">
+                Your donation directly funds life-saving medical treatments for believers in crisis.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">100% Transparency</h3>
+              <p className="text-sm text-muted-foreground">
+                Every donation is tracked and reported. Know exactly where your money goes.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Tax Benefits</h3>
+              <p className="text-sm text-muted-foreground">
+                Donations to BFMAF may be tax-deductible. Request a receipt for your records.
+              </p>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card text-center">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">Build Community</h3>
+              <p className="text-sm text-muted-foreground">
+                Join a family of believers committed to supporting one another in times of need.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How Funds Are Used Section */}
+      <section className="py-16 sm:py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-6">
+                How Your <span className="text-gradient-primary">Funds Are Used</span>
+              </h2>
+              <p className="text-muted-foreground mb-8">
+                We are committed to being good stewards of every donation. Your contributions go directly 
+                to supporting believers in their time of medical crisis.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    70%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Direct Medical Assistance</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Hospital bills, medications, surgeries, and treatments for verified cases.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    15%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Patient Support Services</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Transportation, accommodation for families, and follow-up care coordination.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-secondary text-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    10%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Case Verification & Outreach</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Ensuring each case is genuine and reaching those who need help most.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-muted text-foreground rounded-full flex items-center justify-center font-bold shrink-0">
+                    5%
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Operations & Technology</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Maintaining our platform and ensuring secure, efficient fund management.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=500&fit=crop"
+                alt="Medical team helping patient"
+                className="rounded-2xl shadow-card-hover w-full"
+              />
+              <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-card hidden sm:block">
+                <div className="text-3xl font-bold text-primary">₦5M+</div>
+                <div className="text-sm text-muted-foreground">Raised for medical cases</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories Section */}
+      <section className="py-16 sm:py-20 px-4 bg-secondary/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-4">
+              Stories of <span className="text-gradient-primary">Hope & Healing</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Real testimonials from believers whose lives were transformed through your generosity.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">MA</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Mrs. Adaeze O.</h4>
+                  <p className="text-xs text-muted-foreground">Kidney Surgery • Lagos</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "When I was diagnosed with kidney failure, my world collapsed. BFMAF not only raised funds 
+                for my surgery but surrounded me with prayers and visits. Today, I'm healthy and back 
+                to serving in my local assembly. God bless every donor!"
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • Surgery successful</span>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">BJ</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Brother James E.</h4>
+                  <p className="text-xs text-muted-foreground">Heart Surgery • Jos</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "I needed urgent heart surgery, and my family had exhausted all resources. The Bride family 
+                came together in a way I never imagined. Within weeks, the funds were raised. I'm alive 
+                today because believers chose to give."
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • Recovered</span>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-2xl shadow-card">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">SG</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Sister Grace M.</h4>
+                  <p className="text-xs text-muted-foreground">Cancer Treatment • Abuja</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm italic mb-4">
+                "Facing cancer alone felt impossible, but BFMAF showed me I wasn't alone. The financial 
+                support covered my chemotherapy, and the constant prayers gave me strength to fight. 
+                I'm now in remission. Praise God!"
+              </p>
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <CheckCircle className="w-4 h-4" />
+                <span>Fully funded • In remission</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mt-10">
+            <p className="text-muted-foreground mb-6 italic">
+              "Bear ye one another's burdens, and so fulfil the law of Christ." — Galatians 6:2
+            </p>
+            <Button variant="hero" size="lg" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <Heart className="w-5 h-5" />
+              Make a Donation
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Donate;
