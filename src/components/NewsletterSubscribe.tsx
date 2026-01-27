@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState, forwardRef } from "react";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const NewsletterSubscribe = () => {
+const NewsletterSubscribe = forwardRef<HTMLFormElement>((_, ref) => {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +70,7 @@ const NewsletterSubscribe = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+    <form ref={ref} onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
       <div className="relative flex-1">
         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -97,6 +97,8 @@ const NewsletterSubscribe = () => {
       </Button>
     </form>
   );
-};
+});
+
+NewsletterSubscribe.displayName = "NewsletterSubscribe";
 
 export default NewsletterSubscribe;

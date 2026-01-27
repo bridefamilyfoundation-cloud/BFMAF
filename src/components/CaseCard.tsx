@@ -1,3 +1,4 @@
+import React from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +15,7 @@ interface CaseCardProps {
   category: string;
 }
 
-const CaseCard = ({ id, title, description, image, raised, goal, category }: CaseCardProps) => {
+const CaseCard = React.forwardRef<HTMLAnchorElement, CaseCardProps>(({ id, title, description, image, raised, goal, category }, ref) => {
   const progress = (raised / goal) * 100;
   const fallbackImage = "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800&auto=format&fit=crop";
   const { url: signedUrl, loading: imageLoading } = useSignedUrl(image, fallbackImage);
@@ -66,6 +67,8 @@ const CaseCard = ({ id, title, description, image, raised, goal, category }: Cas
       </div>
     </Link>
   );
-};
+});
+
+CaseCard.displayName = "CaseCard";
 
 export default CaseCard;
