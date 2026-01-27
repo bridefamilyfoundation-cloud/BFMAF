@@ -17,11 +17,14 @@ export function useSignedUrl(
       return;
     }
 
-    // If it's not a storage URL, use as-is
-    if (!filePath.includes("aid-request-images") && !filePath.startsWith("/")) {
+    // If it's a full external URL (not storage), use as-is
+    if (filePath.startsWith("http") && !filePath.includes("supabase.co/storage")) {
       setUrl(filePath);
       return;
     }
+
+    // If it's a storage path (includes bucket name) or a filename, get signed URL
+    // Filenames without path are assumed to be storage files
 
     setLoading(true);
     getSignedUrl(filePath)
