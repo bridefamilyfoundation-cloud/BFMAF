@@ -475,9 +475,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_dashboard_stats: {
+        Row: {
+          active_causes: number | null
+          active_subscribers: number | null
+          pending_aid_requests: number | null
+          pending_users: number | null
+          total_donations_amount: number | null
+          total_donations_count: number | null
+          unique_donors: number | null
+          unread_messages: number | null
+        }
+        Relationships: []
+      }
+      recent_activity: {
+        Row: {
+          action: string | null
+          activity_type: string | null
+          actor: string | null
+          created_at: string | null
+          id: string | null
+          target: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_user_full_details: {
+        Args: { user_uuid: string }
+        Returns: {
+          address: string
+          approved_at: string
+          avatar_url: string
+          created_at: string
+          email: string
+          first_name: string
+          is_approved: boolean
+          last_name: string
+          phone: string
+          role: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
