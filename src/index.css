@@ -165,10 +165,30 @@
     @apply backdrop-blur-xl bg-white/70 border border-white/20;
   }
 
+  .glass-premium {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass-premium {
+    background: rgba(20, 20, 20, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
   .floating-shape {
     @apply absolute rounded-full opacity-60;
     background: var(--gradient-floating);
     filter: blur(40px);
+  }
+
+  .desktop-shadow {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  }
+
+  .progress-bar-glow {
+    box-shadow: 0 0 12px rgba(15, 98, 254, 0.3);
   }
 }
 

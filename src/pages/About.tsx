@@ -149,41 +149,53 @@ const About = () => {
         {/* History Section */}
         <section className="py-12 sm:py-20 px-4">
           <div className="container mx-auto max-w-4xl">
-            <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-3 mb-8">
               <History className="h-8 w-8 text-primary" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Our History</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Our History</h2>
             </div>
-            <div className="bg-card p-6 sm:p-8 rounded-xl shadow-card space-y-4 text-muted-foreground text-sm sm:text-base leading-relaxed">
+            <div className="bg-white dark:bg-slate-800 p-8 sm:p-10 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 space-y-4 text-muted-foreground text-sm sm:text-base leading-relaxed">
               <p>
-                After the National Youth retreat of 1st – 3rd November 2024, while in Bro Emperor's office 
-                reflecting on the results of the meeting, we were struck by the absence of a young gifted 
-                singer and musician, <strong className="text-foreground">Bro Joseph Bala</strong>, who was absent 
-                due to a spinal condition that led to paralysis of his two legs.
+                After the National Youth Retreat of 1st - 3rd November 2024, I was in Bro Emperor's office 
+                feasting on the results of the meeting only to regret the absence of a young gifted singer 
+                and musician, <strong className="text-foreground">Bro Joseph Bala</strong>, who was absent 
+                due to a spinal condition that led to paralysis of his two legs. We discussed extensively 
+                how we could render assistance.
               </p>
               <p>
-                We discussed extensively how we could render assistance. The idea was related to our Pastor 
-                who supported and encouraged us. Pastor Lily was consulted, and she suggested making it a 
-                <strong className="text-foreground"> Bride of Christ Family affair</strong> involving believers 
-                who have compassion. The idea of having a foundation registered was born.
+                I related the idea to my Pastor who supported and encouraged us. I later called Pastor Lily 
+                relating the condition who suggested to make it the <strong className="text-foreground">Bride 
+                of Christ Family affair</strong> which will involve believers who have compassion. The idea 
+                of having a foundation registered was born.
               </p>
               <p>
-                The idea was shared with Bro Moses Ayuba, Bro Joseph Adesida, Bro Joseph Anzaku, and Bro Luke A Ekka. 
-                They all embraced it and started making contributions while the company registration process was ongoing.
+                I and Bro Emperor sold the idea to Bro Moses Ayuba, Bro Joseph Adesida, Bro Joseph Anzaku, 
+                and Bro Luke A Ekka. These all bought the idea and started making contributions while the 
+                company registration process was on.
               </p>
               <p>
-                Meanwhile, in Kaduna, the hospital Bro Joseph Bala was attending suggested surgery costing 
-                ₦4.5 million with only a 50% chance of success. After series of meetings, we concluded to 
-                pursue alternative/Chinese care. A treatment center in Jos was identified.
+                Meanwhile in Kaduna, the hospital Bro Joseph Bala was attending suggested surgery that would 
+                cost <strong className="text-foreground">₦4.5 million with a 50% chance</strong>. He may get 
+                better or worse. After series of meetings we concluded to go for alternative/Chinese care. 
+                A place in Jos was spotted.
               </p>
               <p>
-                Bro Joseph Bala, his father, and Pastor were consulted. They all accepted the offer. 
-                <strong className="text-foreground"> On the 24th March 2025, Bro Joseph Bala arrived in Jos</strong> 
-                and has since been receiving Acupressure, Hydrotherapy, special diet, and other treatments.
+                Bro Joseph Bala, his father and Pastor were consulted. They all accepted the offer. The journey 
+                began. <strong className="text-foreground">On the 24th March 2025, Bro Joseph Bala arrived in Jos</strong>. 
+                He has been on Acupressure, Hydrotherapy, special diet etc.
               </p>
+              <p className="text-foreground font-semibold mb-2">The Foundation Organogram for now:</p>
+              <ol className="list-decimal list-inside space-y-1 mb-4">
+                <li>Bro Ezekiel Ekka (Chairman)</li>
+                <li>Bro Emperor Ayuba (Secretary)</li>
+                <li>Bro Joseph Adesida (Trustee)</li>
+                <li>Bro Joseph Anzaku (Trustee)</li>
+                <li>Bro Moses Ayuba (Trustee)</li>
+                <li>Bro Luke A Ekka (Media)</li>
+              </ol>
               <p className="text-foreground font-medium italic border-l-4 border-primary pl-4 mt-6">
-                We want to thank God for the progress so far. We thank Pastor Ebere Isaac, Pastor Lily Udeh, 
-                and the Board of Trustees for their advice, contributions, and prompt response when the need arises. 
-                May God richly bless you all.
+                We want to thank God for the progress so far. I would like to thank my Pastor, Pastor Ebere Isaac, 
+                Pastor Lily Udeh and the Board of Trustees for your advice, contributions and prompt response when 
+                the need arises.
               </p>
             </div>
           </div>
@@ -192,15 +204,15 @@ const About = () => {
         {/* Board of Trustees Section */}
         <section className="py-12 sm:py-16 px-4 bg-secondary/30">
           <div className="container mx-auto max-w-4xl">
-            <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="flex items-center justify-center gap-3 mb-10">
               <UserCheck className="h-8 w-8 text-primary" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Board of Trustees</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Board of Trustees</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {boardMembers.map((member, index) => (
                 <div
                   key={index}
-                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card text-center hover:shadow-card-hover transition-shadow"
+                  className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 text-center hover:shadow-lg transition-all duration-300"
                 >
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
@@ -216,15 +228,15 @@ const About = () => {
         {/* How We Help Section */}
         <section id="how-it-works" className="py-12 sm:py-20 px-4 scroll-mt-24">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3 sm:mb-4">How We Help</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground text-center mb-3 sm:mb-4">How We Help</h2>
             <p className="text-muted-foreground text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base px-2">
               Such assistance could come in the following ways:
             </p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {howWeHelp.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
+                  className="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300 text-center"
                 >
                   <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <item.icon className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
@@ -240,12 +252,12 @@ const About = () => {
         {/* Values Section */}
         <section className="py-12 sm:py-20 px-4 bg-secondary/30">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8 sm:mb-12">Our Values</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground text-center mb-8 sm:mb-12">Our Values</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {values.map((value, index) => (
                 <div
                   key={index}
-                  className="bg-card p-4 sm:p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow text-center"
+                  className="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300 text-center"
                 >
                   <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <value.icon className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />

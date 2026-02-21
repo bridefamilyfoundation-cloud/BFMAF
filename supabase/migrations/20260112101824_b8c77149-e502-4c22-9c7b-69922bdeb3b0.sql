@@ -143,7 +143,7 @@ CREATE POLICY "Users can insert their own profile"
 CREATE POLICY "Admins can view all profiles"
     ON public.profiles FOR SELECT
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for user_roles
 CREATE POLICY "Users can view their own roles"
@@ -153,7 +153,7 @@ CREATE POLICY "Users can view their own roles"
 CREATE POLICY "Admins can manage all roles"
     ON public.user_roles FOR ALL
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for causes (public read, admin write)
 CREATE POLICY "Anyone can view active causes"
@@ -163,7 +163,7 @@ CREATE POLICY "Anyone can view active causes"
 CREATE POLICY "Admins can manage all causes"
     ON public.causes FOR ALL
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for donations
 CREATE POLICY "Users can view their own donations"
@@ -177,7 +177,7 @@ CREATE POLICY "Anyone can create donations"
 CREATE POLICY "Admins can view all donations"
     ON public.donations FOR SELECT
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for site_settings (public read, admin write)
 CREATE POLICY "Anyone can view site settings"
@@ -187,7 +187,7 @@ CREATE POLICY "Anyone can view site settings"
 CREATE POLICY "Admins can manage site settings"
     ON public.site_settings FOR ALL
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for contact_submissions
 CREATE POLICY "Anyone can submit contact form"
@@ -197,12 +197,12 @@ CREATE POLICY "Anyone can submit contact form"
 CREATE POLICY "Admins can view contact submissions"
     ON public.contact_submissions FOR SELECT
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 CREATE POLICY "Admins can update contact submissions"
     ON public.contact_submissions FOR UPDATE
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS Policies for activity_log
 CREATE POLICY "Users can view their own activity"
@@ -216,4 +216,4 @@ CREATE POLICY "Anyone can create activity log entries"
 CREATE POLICY "Admins can view all activity"
     ON public.activity_log FOR SELECT
     TO authenticated
-    USING (public.has_role(auth.uid(), 'admin'));
+    USING (public.has_role(auth.uid(), 'admin'::app_role));

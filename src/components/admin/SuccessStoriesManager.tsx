@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  BookOpen,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  EyeOff,
-  Star,
-  Calendar,
-  Quote,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Edit, Trash2, Eye, EyeOff, Star, Calendar, Quote, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import ImageUpload from "./ImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface SuccessStory {
   id: string;
@@ -54,6 +42,7 @@ interface SuccessStory {
   status: string;
   story_content: string;
   featured_quote: string | null;
+  image_url: string | null;
   is_featured: boolean;
   is_published: boolean;
   created_at: string;
@@ -97,6 +86,7 @@ const SuccessStoriesManager = () => {
     status: "ongoing",
     story_content: "",
     featured_quote: "",
+    image_url: "",
     is_featured: false,
     is_published: false,
   });
@@ -147,6 +137,7 @@ const SuccessStoriesManager = () => {
         ...storyForm,
         featured_quote: storyForm.featured_quote || null,
         location: storyForm.location || null,
+        image_url: storyForm.image_url || null,
       };
 
       if (editingStory) {
@@ -313,6 +304,7 @@ const SuccessStoriesManager = () => {
       status: "ongoing",
       story_content: "",
       featured_quote: "",
+      image_url: "",
       is_featured: false,
       is_published: false,
     });
@@ -340,6 +332,7 @@ const SuccessStoriesManager = () => {
       status: story.status,
       story_content: story.story_content,
       featured_quote: story.featured_quote || "",
+      image_url: story.image_url || "",
       is_featured: story.is_featured,
       is_published: story.is_published,
     });
@@ -611,6 +604,19 @@ const SuccessStoriesManager = () => {
                 placeholder="A memorable quote from this story..."
                 rows={2}
               />
+            </div>
+            <div>
+              <Label htmlFor="image_url">Patient/Story Image (Optional)</Label>
+              <ImageUpload
+                bucket="success-stories"
+                folder="patient-images"
+                currentImageUrl={storyForm.image_url}
+                onUploadComplete={(url) => setStoryForm({ ...storyForm, image_url: url })}
+                maxSizeMB={5}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload a patient image to display on the success stories page. Recommended size: 400x400px
+              </p>
             </div>
           </div>
           <DialogFooter>

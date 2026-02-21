@@ -52,7 +52,7 @@ USING (is_published = true);
 CREATE POLICY "Admins can manage all success stories"
 ON public.success_stories
 FOR ALL
-USING (has_role(auth.uid(), 'admin'));
+USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS policies for treatment_updates
 CREATE POLICY "Anyone can view treatment updates for published stories"
@@ -68,7 +68,7 @@ USING (
 CREATE POLICY "Admins can manage all treatment updates"
 ON public.treatment_updates
 FOR ALL
-USING (has_role(auth.uid(), 'admin'));
+USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- RLS policies for testimonials
 CREATE POLICY "Anyone can view published testimonials"
@@ -79,7 +79,7 @@ USING (is_published = true);
 CREATE POLICY "Admins can manage all testimonials"
 ON public.testimonials
 FOR ALL
-USING (has_role(auth.uid(), 'admin'));
+USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- Create trigger for updated_at on success_stories
 CREATE TRIGGER update_success_stories_updated_at

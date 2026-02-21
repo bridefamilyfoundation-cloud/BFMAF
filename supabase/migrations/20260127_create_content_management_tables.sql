@@ -36,7 +36,7 @@ CREATE POLICY "Admins can manage page sections"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -72,7 +72,7 @@ CREATE POLICY "Admins can manage team members"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -107,7 +107,7 @@ CREATE POLICY "Admins can manage values"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -143,7 +143,7 @@ CREATE POLICY "Admins can manage help items"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -180,7 +180,7 @@ CREATE POLICY "Admins can manage process steps"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -215,7 +215,7 @@ CREATE POLICY "Admins can manage FAQs"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 
@@ -250,7 +250,7 @@ CREATE POLICY "Admins can manage submission requirements"
     EXISTS (
       SELECT 1 FROM user_roles
       WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      AND user_roles.role = 'admin'::app_role
     )
   );
 

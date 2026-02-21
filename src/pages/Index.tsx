@@ -56,12 +56,13 @@ const Index = () => {
       if (causesError) throw causesError;
       setCauses(causesData || []);
 
-      // Fetch total raised and donor count from donations
+      // Fetch total raised and donor count from VERIFIED donations only
       const { data: donationsData, error: donationsError } = await supabase
         .from("donations")
-        .select("amount, user_id, donor_email");
+        .select("amount, user_id, donor_email, status")
+        .in("status", ["completed", "success"]);
 
-      if (!donationsError && donationsData) {
+      if (!donationsError && donationsData && donationsData.length > 0) {
         const totalRaised = donationsData.reduce((sum, d) => sum + Number(d.amount), 0);
         // Count unique donors (by user_id or donor_email)
         const uniqueDonors = new Set(
@@ -71,6 +72,13 @@ const Index = () => {
           ...prev,
           totalRaised,
           totalDonors: uniqueDonors.size,
+        }));
+      } else {
+        // No verified donations - set to zero
+        setStats(prev => ({
+          ...prev,
+          totalRaised: 0,
+          totalDonors: 0,
         }));
       }
 
@@ -109,47 +117,47 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section 
-        className="relative pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 overflow-hidden"
-        style={{
-          backgroundImage: `url(${heroBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full mb-4 sm:mb-6 animate-fade-in">
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">
-                Only Believe
+      <section className="relative pt-20 sm:pt-24 pb-8 sm:pb-12 px-4 overflow-hidden">
+        <div className="container mx-auto relative z-10 max-w-7xl">
+          <div 
+            className="relative min-h-[540px] flex flex-col justify-end overflow-hidden rounded-[2.5rem] p-8 sm:p-12 shadow-2xl"
+            style={{
+              backgroundImage: `linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0) 100%), url(${heroBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div className="absolute top-8 left-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className="size-2 rounded-full bg-accent animate-pulse"></span>
+                Active Relief Program
               </span>
             </div>
-
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground mb-4 sm:mb-5 animate-slide-up leading-tight">
-              Helping Believers{" "}
-              <span className="text-gradient-primary">Overcome</span>{" "}
-              Medical Crises
-            </h1>
-
-            <p className="text-base sm:text-lg md:text-xl text-foreground/90 mb-6 sm:mb-8 max-w-2xl mx-auto animate-slide-up delay-100 font-medium px-2">
-              We provide prayer, support, and financial aid to Christians facing overwhelming medical conditions.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-slide-up delay-200 px-4 sm:px-0">
-              <Link to="/get-help">
-                <Button variant="hero" size="lg" className="w-full sm:w-auto">
-                  <HandHeart className="w-5 h-5" />
-                  Request Assistance
-                </Button>
-              </Link>
-              <Link to="/cases">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  View Cases
-                </Button>
-              </Link>
+            
+            <div className="flex flex-col gap-6 max-w-3xl">
+              <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.05] tracking-tight">
+                Helping Believers <br />
+                <span className="text-primary">Overcome</span> <br />
+                Medical Crises
+              </h1>
+              
+              <p className="text-white/80 text-lg sm:text-xl font-medium leading-relaxed max-w-[95%]">
+                We provide prayer, support, and financial aid to Christians facing overwhelming medical conditions.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 max-w-xl">
+                <Link to="/get-help" className="w-full">
+                  <Button variant="hero" size="lg" className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all">
+                    <HandHeart className="w-5 h-5" />
+                    Request Assistance
+                  </Button>
+                </Link>
+                <Link to="/cases" className="w-full">
+                  <Button variant="outline" size="lg" className="w-full h-14 rounded-2xl bg-white text-black text-base font-bold hover:bg-white/90 active:scale-95 transition-all">
+                    View Active Cases
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -157,64 +165,107 @@ const Index = () => {
 
       {/* Stats Section */}
       {siteSettings.show_live_stats && (
-        <section className="py-12 sm:py-20 px-4 relative z-10">
-          <div className="container mx-auto">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              <StatCounter
-                end={stats.totalRaised}
-                prefix="₦"
-                suffix="+"
-                label="Funds Raised"
-                icon={<TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-              />
-              <StatCounter
-                end={stats.totalDonors}
-                suffix="+"
-                label="Donors"
-                icon={<Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-              />
-              <StatCounter
-                end={stats.casesHelped}
-                suffix="+"
-                label="Cases Helped"
-                icon={<Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-              />
-              <StatCounter
-                end={siteSettings.funds_to_program || stats.fundsToProgram}
-                suffix="%"
-                label="Funds to Cases"
-                icon={<Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />}
-              />
+        <section className="py-16 sm:py-20 px-4 relative z-10">
+          <div className="container mx-auto max-w-6xl">
+            <div className="bg-gradient-to-br from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 rounded-[2.5rem] p-10 sm:p-14 border border-gray-200 dark:border-slate-700 shadow-xl">
+              <div className="flex flex-col items-center text-center mb-12">
+                <span className="px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-extrabold uppercase tracking-[0.25em] mb-4">
+                  Live Dashboard
+                </span>
+                <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-2">
+                  Our Recent Impact
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">Real-time updates on our mission</p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8 sm:gap-10">
+                {/* Funds Raised */}
+                <div className="group">
+                  <div className="flex flex-col items-center text-center mb-4">
+                    <p className="text-4xl sm:text-5xl font-black text-primary tracking-tight mb-2">
+                      ₦{stats.totalRaised.toLocaleString()}+
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                      Funds Raised
+                    </p>
+                    <span className="text-xs font-semibold text-foreground px-3 py-1 bg-primary/10 rounded-full">
+                      Active
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-full w-[75%] bg-gradient-to-r from-primary to-primary/80 rounded-full progress-bar-glow transition-all duration-500"></div>
+                  </div>
+                  <p className="text-center text-xs text-muted-foreground mt-2">75% of monthly goal</p>
+                </div>
+
+                {/* Donors */}
+                <div className="group">
+                  <div className="flex flex-col items-center text-center mb-4">
+                    <p className="text-4xl sm:text-5xl font-black text-primary tracking-tight mb-2">
+                      {stats.totalDonors}+
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                      Generous Donors
+                    </p>
+                    <span className="text-xs font-semibold text-foreground px-3 py-1 bg-primary/10 rounded-full">
+                      United in Christ
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-full w-[85%] bg-gradient-to-r from-primary to-primary/80 rounded-full progress-bar-glow transition-all duration-500"></div>
+                  </div>
+                  <p className="text-center text-xs text-muted-foreground mt-2">Growing community</p>
+                </div>
+
+                {/* Lives Impacted */}
+                <div className="group">
+                  <div className="flex flex-col items-center text-center mb-4">
+                    <p className="text-4xl sm:text-5xl font-black text-accent tracking-tight mb-2">
+                      {stats.casesHelped}+
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                      Lives Impacted
+                    </p>
+                    <span className="text-xs font-semibold text-accent px-3 py-1 bg-accent/10 rounded-full">
+                      {siteSettings.funds_to_program || stats.fundsToProgram}% to Cases
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-full w-[90%] bg-gradient-to-r from-accent to-orange-500 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-500"></div>
+                  </div>
+                  <p className="text-center text-xs text-muted-foreground mt-2">Ongoing support</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* How We Help Section */}
-      <section className="py-12 sm:py-20 px-4 relative z-10 bg-secondary/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground mb-3 sm:mb-4">
-              How We <span className="text-gradient-primary">Help</span>
+      <section className="py-12 sm:py-16 px-4 relative z-10">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex items-center justify-between mb-8 sm:mb-10 px-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
+              Focus Areas
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-              The Bride of Christ as a Family reaches out for assistance in the following ways:
-            </p>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest hidden sm:block">
+              Our Mission
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { icon: BookOpen, title: "Prayers", description: "Interceding for our brothers and sisters in their time of need" },
-              { icon: Users, title: "Visits", description: "Where and when possible, we visit to show love and support" },
-              { icon: Phone, title: "Calls", description: "Reaching out to admonish and encourage during difficult times" },
-              { icon: Heart, title: "Financial & Medical Aid", description: "Providing tangible assistance for medical expenses" },
+              { icon: BookOpen, title: "Prayers", description: "Interceding for our brothers and sisters in their time of need", color: "bg-blue-50 dark:bg-primary/10 text-primary" },
+              { icon: Users, title: "Visits", description: "Where and when possible, we visit to show love and support", color: "bg-green-50 dark:bg-green-500/10 text-green-600" },
+              { icon: Phone, title: "Calls", description: "Reaching out to admonish and encourage during difficult times", color: "bg-purple-50 dark:bg-purple-500/10 text-purple-600" },
+              { icon: Heart, title: "Financial & Medical Aid", description: "Providing tangible assistance for medical expenses", color: "bg-orange-50 dark:bg-accent/10 text-accent" },
             ].map((item, index) => (
-              <div key={index} className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-card hover:shadow-card-hover transition-all duration-300 text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+              <div key={index} className="flex flex-col items-center p-5 sm:p-6 rounded-[2rem] bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className={`size-14 sm:size-16 rounded-2xl ${item.color} flex items-center justify-center mb-3 sm:mb-4`}>
+                  <item.icon className="w-7 h-7 sm:w-8 sm:h-8" />
                 </div>
-                <h3 className="text-base sm:text-xl font-serif font-semibold text-foreground mb-1 sm:mb-2">{item.title}</h3>
-                <p className="text-muted-foreground text-xs sm:text-sm line-clamp-3">{item.description}</p>
+                <h3 className="text-[10px] sm:text-xs font-extrabold text-center leading-tight uppercase tracking-wide text-foreground mb-2">{item.title}</h3>
+                <p className="text-muted-foreground text-xs text-center line-clamp-2 hidden sm:block">{item.description}</p>
               </div>
             ))}
           </div>

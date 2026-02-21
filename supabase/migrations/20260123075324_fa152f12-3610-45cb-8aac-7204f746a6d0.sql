@@ -11,7 +11,7 @@ USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Require authentication for contact_submissions"
 ON public.contact_submissions
 FOR SELECT
-USING (auth.uid() IS NOT NULL AND public.has_role(auth.uid(), 'admin'));
+USING (auth.uid() IS NOT NULL AND public.has_role(auth.uid(), 'admin'::app_role));
 
 -- DONATIONS TABLE: Require authentication for viewing
 CREATE POLICY "Require authentication for donations access"
@@ -29,4 +29,4 @@ USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Require authentication for newsletter_subscribers"
 ON public.newsletter_subscribers
 FOR SELECT
-USING (auth.uid() IS NOT NULL AND public.has_role(auth.uid(), 'admin'));
+USING (auth.uid() IS NOT NULL AND public.has_role(auth.uid(), 'admin'::app_role));

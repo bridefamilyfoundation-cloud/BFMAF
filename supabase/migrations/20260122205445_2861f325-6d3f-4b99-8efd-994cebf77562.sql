@@ -13,7 +13,7 @@ CREATE POLICY "Admins can view all aid request images"
 ON storage.objects FOR SELECT
 USING (
   bucket_id = 'aid-request-images' 
-  AND public.has_role(auth.uid(), 'admin')
+  AND public.has_role(auth.uid(), 'admin'::app_role)
 );
 
 -- Authenticated users can upload images (for aid request submissions)
@@ -29,7 +29,7 @@ CREATE POLICY "Admins can delete aid request images"
 ON storage.objects FOR DELETE
 USING (
   bucket_id = 'aid-request-images' 
-  AND public.has_role(auth.uid(), 'admin')
+  AND public.has_role(auth.uid(), 'admin'::app_role)
 );
 
 -- Admins can update images
@@ -37,5 +37,5 @@ CREATE POLICY "Admins can update aid request images"
 ON storage.objects FOR UPDATE
 USING (
   bucket_id = 'aid-request-images' 
-  AND public.has_role(auth.uid(), 'admin')
+  AND public.has_role(auth.uid(), 'admin'::app_role)
 );

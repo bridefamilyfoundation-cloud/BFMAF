@@ -1,111 +1,73 @@
-# BFMAF - Bride Family Medical Aid Foundation
+# Welcome to your Lovable project
 
-A faith-based medical assistance platform providing prayer, support, and financial aid to Christians facing overwhelming medical conditions in Jos, Nigeria.
+## Project info
 
-## 🌟 Features
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-- **Medical Case Management** - Create, view, and manage medical assistance cases
-- **Donation System** - Secure donation processing and tracking
-- **User Authentication** - Supabase-powered authentication system
-- **Admin Dashboard** - Comprehensive content and case management
-- **Success Stories** - Showcase successful medical interventions
-- **Newsletter System** - Email subscription and communication
-- **Responsive Design** - Mobile-friendly interface
-- **SEO Optimized** - Full meta tags and structured data
+## How can I edit this code?
 
-## 🚀 Quick Start
+There are several ways of editing your application.
 
-### Prerequisites
+**Use Lovable**
 
-- Node.js 18+ and npm
-- Supabase account
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-### Installation
+Changes made via Lovable will be committed automatically to this repo.
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd BFMAF-main
+**Use your preferred IDE**
 
-# Install dependencies
-npm install
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your Supabase credentials
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-# Start development server
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-The application will be available at `http://localhost:8080`
+**Edit a file directly in GitHub**
 
-## 🛠️ Tech Stack
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-- **Frontend Framework**: React 18.3.1 with TypeScript
-- **Build Tool**: Vite 5.4.19
-- **Styling**: TailwindCSS with custom theme
-- **UI Components**: shadcn/ui (Radix UI primitives)
-- **Backend**: Supabase (authentication, database, storage)
-- **State Management**: TanStack Query (React Query)
-- **Routing**: React Router DOM v6
-- **Icons**: Lucide React
-- **Forms**: React Hook Form with Zod validation
+**Use GitHub Codespaces**
 
-## 📁 Project Structure
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-```
-src/
-├── components/       # Reusable UI components
-│   ├── admin/       # Admin-specific components
-│   └── ui/          # shadcn/ui components
-├── pages/           # Page components (routes)
-├── hooks/           # Custom React hooks
-├── integrations/    # External service integrations
-├── lib/             # Utility functions
-└── types/           # TypeScript type definitions
-```
+## What technologies are used for this project?
 
-## 🔧 Available Scripts
+This project is built with:
 
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run build:dev    # Build in development mode
-npm run lint         # Run ESLint
-npm run preview      # Preview production build
-```
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## 🌐 Deployment
+## How can I deploy this project?
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions including:
-- Netlify deployment
-- Vercel deployment
-- GitHub Pages deployment
-- Supabase setup
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-## 🔐 Environment Variables
+## Can I connect a custom domain to my Lovable project?
 
-Required environment variables (see `.env.example`):
+Yes, you can!
 
-```
-VITE_SUPABASE_PROJECT_ID=your-project-id
-VITE_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-```
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-⚠️ **Never commit `.env` file to version control!**
-
-## 📝 License
-
-Copyright © 2024 Bride Family Medical Aid Foundation
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-## 📧 Contact
-
-- **Location**: Divine Love Christian Assembly Jos, Longwa Phase II Behind Millennium Hotel Jos, Plateau State, Nigeria
-- **Phone**: +234-703-212-8927
-- **Website**: https://bfmaf.com
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

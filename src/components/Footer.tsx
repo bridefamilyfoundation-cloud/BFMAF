@@ -15,7 +15,7 @@ const Footer = () => {
 
       <div className="container mx-auto px-4 py-10 sm:py-16 relative z-10">
         {/* Newsletter Section */}
-        <div className="bg-primary-foreground/5 rounded-2xl p-6 mb-12 border border-primary-foreground/10">
+        <div className="bg-primary-foreground/5 rounded-[2rem] p-8 mb-12 border border-primary-foreground/10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h4 className="font-serif font-semibold text-lg mb-1">Subscribe to Our Newsletter</h4>
@@ -36,7 +36,7 @@ const Footer = () => {
               <img 
                 src={logo} 
                 alt="BFMAF Logo" 
-                className="h-14 w-auto object-contain bg-white/90 rounded-lg p-1"
+                className="h-14 w-auto object-contain bg-white/90 rounded-2xl p-2"
               />
             </Link>
             <p className="text-primary-foreground/70 mb-4 text-sm italic">
@@ -72,17 +72,17 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/how-it-works" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  How It Works
+                  Programs
                 </Link>
               </li>
               <li>
-                <Link to="/cases" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Active Cases
+                <Link to="/success-stories" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
+                  Success Stories
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Contact
+                  Contact Us
                 </Link>
               </li>
             </ul>
@@ -94,17 +94,17 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <Link to="/get-help" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Request Help
+                  Request Aid
                 </Link>
               </li>
               <li>
                 <Link to="/donate" className="text-primary-foreground/70 hover:text-accent transition-colors duration-300">
-                  Support / Donate
+                  Donate
                 </Link>
               </li>
-              <li className="text-primary-foreground/70">🙏 Prayers</li>
-              <li className="text-primary-foreground/70">👋 Visits</li>
-              <li className="text-primary-foreground/70">📞 Calls to Encourage</li>
+              <li className="text-primary-foreground/70">Prayers</li>
+              <li className="text-primary-foreground/70">Visits</li>
+              <li className="text-primary-foreground/70">Calls to Encourage</li>
             </ul>
           </div>
 

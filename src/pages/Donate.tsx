@@ -18,12 +18,6 @@ type PaymentStatus = "idle" | "success" | "cancelled" | "failed";
 
 const donationAmounts = [1000, 5000, 10000, 25000, 50000, 100000];
 
-const bankDetails = {
-  bankName: "First Bank of Nigeria",
-  accountName: "BFMAF Foundation",
-  accountNumber: "1234567890",
-};
-
 const Donate = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,6 +34,12 @@ const Donate = () => {
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [bankDetails, setBankDetails] = useState({
+    bankName: "",
+    accountName: "",
+    accountNumber: "",
+  });
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -48,6 +48,8 @@ const Donate = () => {
 
   useEffect(() => {
     checkAuth();
+    fetchBankDetails();
+    fetchTestimonials();
     
     // Check for payment status from Paystack redirect
     const status = searchParams.get("status");
@@ -69,6 +71,46 @@ const Donate = () => {
       setPaymentStatus("cancelled");
     }
   }, []);
+
+  const fetchBankDetails = async () => {
+    try {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .in("key", ["bank_name", "account_number", "account_name"]);
+
+      if (data) {
+        const settings: any = {};
+        data.forEach(item => {
+          settings[item.key] = item.value;
+        });
+        setBankDetails({
+          bankName: settings.bank_name || "",
+          accountName: settings.account_name || "",
+          accountNumber: settings.account_number || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching bank details:", error);
+    }
+  };
+
+  const fetchTestimonials = async () => {
+    try {
+      const { data } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("is_featured", true)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (data && data.length > 0) {
+        setTestimonials(data);
+      }
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+    }
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -1017,66 +1059,47 @@ const Donate = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-card p-6 rounded-2xl shadow-card">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">MA</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Mrs. Adaeze O.</h4>
-                  <p className="text-xs text-muted-foreground">Kidney Surgery • Lagos</p>
-                </div>
+            {testimonials.length > 0 ? (
+              testimonials.map((testimonial) => {
+                const initials = testimonial.author_name
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase();
+                
+                return (
+                  <div key={testimonial.id} className="bg-card p-6 rounded-2xl shadow-card">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span className="text-xl font-bold text-primary">{initials}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">{testimonial.author_name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {testimonial.case_type} • {testimonial.location}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground text-sm italic mb-4">
+                      "{testimonial.content}"
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-primary">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>{testimonial.outcome || "Fully funded"}</span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="col-span-3 text-center py-12">
+                <Heart className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground">No testimonials available yet.</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Check back soon to read inspiring stories from those we've helped.
+                </p>
               </div>
-              <p className="text-muted-foreground text-sm italic mb-4">
-                "When I was diagnosed with kidney failure, my world collapsed. BFMAF not only raised funds 
-                for my surgery but surrounded me with prayers and visits. Today, I'm healthy and back 
-                to serving in my local assembly. God bless every donor!"
-              </p>
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <CheckCircle className="w-4 h-4" />
-                <span>Fully funded • Surgery successful</span>
-              </div>
-            </div>
-            <div className="bg-card p-6 rounded-2xl shadow-card">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">BJ</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Brother James E.</h4>
-                  <p className="text-xs text-muted-foreground">Heart Surgery • Jos</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm italic mb-4">
-                "I needed urgent heart surgery, and my family had exhausted all resources. The Bride family 
-                came together in a way I never imagined. Within weeks, the funds were raised. I'm alive 
-                today because believers chose to give."
-              </p>
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <CheckCircle className="w-4 h-4" />
-                <span>Fully funded • Recovered</span>
-              </div>
-            </div>
-            <div className="bg-card p-6 rounded-2xl shadow-card">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">SG</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">Sister Grace M.</h4>
-                  <p className="text-xs text-muted-foreground">Cancer Treatment • Abuja</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm italic mb-4">
-                "Facing cancer alone felt impossible, but BFMAF showed me I wasn't alone. The financial 
-                support covered my chemotherapy, and the constant prayers gave me strength to fight. 
-                I'm now in remission. Praise God!"
-              </p>
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <CheckCircle className="w-4 h-4" />
-                <span>Fully funded • In remission</span>
-              </div>
-            </div>
+            )}
           </div>
           <div className="text-center mt-10">
             <p className="text-muted-foreground mb-6 italic">

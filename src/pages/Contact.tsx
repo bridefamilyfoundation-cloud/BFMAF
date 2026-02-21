@@ -218,7 +218,7 @@ const Contact = () => {
                   {contactInfo.map((info, index) => (
                     <div
                       key={index}
-                      className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow"
+                      className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300"
                     >
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                         <info.icon className="h-6 w-6 text-primary" />
@@ -254,7 +254,7 @@ const Contact = () => {
               </div>
 
               {/* Contact Form */}
-              <div className="bg-card p-8 rounded-2xl shadow-card">
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700">
                 <h2 className="text-2xl font-bold text-foreground mb-6">Send Us a Message</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -335,7 +335,7 @@ const Contact = () => {
             </h2>
             <div className="space-y-4">
               {faqs.map((faq, index) => (
-                <div key={index} className="bg-card p-6 rounded-xl shadow-card">
+                <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700">
                   <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
                   <p className="text-muted-foreground">{faq.a}</p>
                 </div>

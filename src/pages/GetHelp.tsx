@@ -73,8 +73,6 @@ const GetHelp = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -96,38 +94,8 @@ const GetHelp = () => {
     },
   });
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Redirect to auth if not logged in
-      if (!user) {
-        toast({
-          title: "Login Required",
-          description: "Please sign in to request assistance",
-        });
-        navigate("/auth", { state: { returnTo: "/get-help" } });
-        return;
-      }
-      
-      setUser(user);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profile) {
-        form.setValue("contactName", `${profile.first_name || ""} ${profile.last_name || ""}`.trim());
-        form.setValue("contactEmail", profile.email || user.email || "");
-        form.setValue("contactPhone", profile.phone || "");
-        form.setValue("location", profile.address || "");
-      } else if (user.email) {
-        form.setValue("contactEmail", user.email);
-      }
-    };
-    getUser();
-  }, [form, navigate, toast]);
+  // No auth required - public can submit help requests
+  // Contact details are collected via the form
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -214,7 +182,7 @@ ${values.financialBreakdown}
       `.trim();
 
       const { error } = await supabase.from("aid_requests").insert({
-        user_id: user?.id || null,
+        user_id: null, // Public submissions don't have user_id
         title: values.title,
         description: description,
         category: values.category,
@@ -230,11 +198,7 @@ ${values.financialBreakdown}
 
       if (error) throw error;
 
-      await supabase.from("activity_log").insert({
-        user_id: user?.id || null,
-        action: "aid_request_submitted",
-        details: { title: values.title, category: values.category, patientName: values.patientName },
-      });
+      // Activity logging removed - public submissions don't need activity tracking
 
       setIsSuccess(true);
       toast({
@@ -301,47 +265,67 @@ ${values.financialBreakdown}
       <FloatingBackground />
       <Navbar />
 
-      <div className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-3xl">
+      <div className="pt-24 pb-20 px-4">
+        <div className="container mx-auto max-w-5xl">
           <Breadcrumbs />
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <HandHeart className="w-10 h-10 text-primary" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-              Request <span className="text-gradient-primary">Assistance</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
-              Tell us about your situation and how the Bride of Christ family can help. 
-              All requests are reviewed by our team before being published.
-            </p>
-            <p className="text-sm text-muted-foreground italic">
-              "And whether one member suffer, all the members suffer with it" — 1 Corinthians 12:26
-            </p>
-          </div>
+          
+          <div className="grid lg:grid-cols-12 gap-8 mt-8">
+            {/* Sidebar */}
+            <aside className="lg:col-span-4 flex flex-col gap-6">
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700">
+                <h1 className="text-3xl font-extrabold text-foreground mb-4 leading-tight">
+                  Request for Financial Aid
+                </h1>
+                <p className="text-muted-foreground text-base leading-relaxed">
+                  We're here to support you in your medical journey. Please complete this form with accurate details to help us evaluate your case.
+                </p>
+              </div>
 
-          {/* Requirements Notice */}
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
-            <h3 className="font-semibold text-foreground mb-3">Requirements for Submission:</h3>
-            <ul className="space-y-2 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <Camera className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span><strong>Photographs</strong> - Clear images of the patient and condition</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span><strong>Medical History</strong> - From onset to current status</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <DollarSign className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span><strong>Financial Implication</strong> - Breakdown of medical management costs</span>
-              </li>
-            </ul>
-          </div>
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-foreground">
+                  <FileText className="w-5 h-5 text-primary" />
+                  Requirements
+                </h3>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-bold text-foreground mb-1">Photographs</h4>
+                    <p className="text-sm text-muted-foreground">Clear images of the patient and their current condition</p>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground mb-1">Medical History</h4>
+                    <p className="text-sm text-muted-foreground">Complete history from onset to current status</p>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground mb-1">Financial Breakdown</h4>
+                    <p className="text-sm text-muted-foreground">Detailed breakdown of medical management costs</p>
+                  </div>
+                </div>
+              </div>
 
-          {/* Form */}
-          <div className="bg-card rounded-2xl p-6 md:p-8 shadow-card">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-8 rounded-[2rem] border border-blue-100 dark:border-blue-800/50">
+                <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2">Need Urgent Help?</h3>
+                <p className="text-sm text-blue-800/70 dark:text-blue-400/70 mb-4">If this is a life-threatening emergency, please call your local emergency services immediately.</p>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 text-blue-900 dark:text-blue-300">
+                    <span className="text-sm font-semibold">Scripture: 1 Cor 12:26</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Form */}
+            <div className="lg:col-span-8">
+              <div className="bg-white dark:bg-slate-800 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 p-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary">Form Progress</span>
+                    <span className="text-xs font-bold text-muted-foreground">Complete All Sections</span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div className="bg-primary h-full rounded-full transition-all duration-300" style={{width: '0%'}}></div>
+                  </div>
+                </div>
+                <div className="p-8 lg:p-12">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {/* Patient Information Section */}
@@ -718,6 +702,9 @@ ${values.financialBreakdown}
                 </div>
               </form>
             </Form>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

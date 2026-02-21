@@ -12,14 +12,11 @@ import {
 const routeLabels: Record<string, string> = {
   "/": "Home",
   "/about": "About Us",
-  "/cases": "Active Cases",
+  "/cases": "Cases",
   "/contact": "Contact",
   "/donate": "Support/Donate",
   "/get-help": "Request Help",
-  "/profile": "Profile",
-  "/activity": "Activity",
   "/admin": "Admin",
-  "/auth": "Sign In",
 };
 
 interface BreadcrumbsProps {

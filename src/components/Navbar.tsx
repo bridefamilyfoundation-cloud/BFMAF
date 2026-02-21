@@ -8,12 +8,10 @@ import logo from "@/assets/logo.png";
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "About Us", path: "/about" },
-  { name: "How It Works", path: "/how-it-works" },
+  { name: "Programs", path: "/how-it-works" },
   { name: "Success Stories", path: "/success-stories" },
-  { name: "Request Help", path: "/get-help" },
-  { name: "Support/Donate", path: "/donate" },
-  { name: "Active Cases", path: "/cases" },
-  { name: "Contact", path: "/contact" },
+  { name: "Request Aid", path: "/get-help" },
+  { name: "Contact Us", path: "/contact" },
 ];
 
 const Navbar = () => {
@@ -34,8 +32,8 @@ const Navbar = () => {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         scrolled
-          ? "py-2 backdrop-blur-2xl bg-background/80 border-b border-border/50 shadow-lg shadow-primary/5"
-          : "py-4 backdrop-blur-xl bg-white/60"
+          ? "py-2 glass-premium border-b border-border/50 shadow-lg shadow-primary/5"
+          : "py-4 glass-premium"
       )}
     >
       <div className="container mx-auto px-4">
@@ -75,7 +73,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center">
-            <div className="flex items-center gap-1 bg-secondary/50 backdrop-blur-sm rounded-full px-2 py-1.5 border border-border/30">
+            <div className="flex items-center gap-1 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-full px-2 py-1.5 border border-slate-200/50 dark:border-slate-700/50">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -95,15 +93,6 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-2">
-            <Link to="/profile">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-secondary hover:text-primary transition-all duration-300"
-              >
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
             <Link to="/get-help">
               <Button
                 variant="accent"
@@ -168,14 +157,7 @@ const Navbar = () => {
 
             <div className="h-px bg-border/50 my-4" />
 
-            <Link to="/profile" onClick={() => setIsOpen(false)} className="block">
-              <Button variant="outline" className="w-full rounded-xl h-12">
-                <User className="w-4 h-4" />
-                Profile
-              </Button>
-            </Link>
-
-            <Link to="/get-help" onClick={() => setIsOpen(false)} className="block mt-3">
+            <Link to="/get-help" onClick={() => setIsOpen(false)} className="block">
               <Button variant="accent" className="w-full rounded-xl h-12 shadow-accent">
                 <HandHeart className="w-4 h-4" />
                 Get Help

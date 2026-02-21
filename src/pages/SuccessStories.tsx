@@ -20,6 +20,7 @@ interface SuccessStory {
   status: string;
   story_content: string;
   featured_quote: string | null;
+  image_url: string | null;
   is_featured: boolean;
 }
 
@@ -41,45 +42,50 @@ interface Testimonial {
 // Default fallback data
 const defaultTimeline = [
   {
-    date: "November 2024",
+    date: "November 1-3, 2024",
     title: "The Call to Action",
-    description: "After the National Youth Retreat (1st-3rd Nov), Bro Joseph Bala's absence due to a spinal condition that caused paralysis sparked the vision for BFMAF.",
+    description: "After the National Youth Retreat, Bro Joseph Bala's absence due to a spinal condition causing paralysis of both legs sparked the vision. Discussions in Bro Emperor's office led to the decision to render assistance.",
+  },
+  {
+    date: "November 2024",
+    title: "Foundation Vision Born",
+    description: "Pastor Ebere Isaac supported the idea. Pastor Lily Udeh suggested making it a Bride of Christ Family affair. The idea of registering a foundation was born.",
   },
   {
     date: "December 2024",
-    title: "Foundation Formed",
-    description: "The idea was shared with brethren who embraced it wholeheartedly. Contributions began while the company registration process was initiated.",
+    title: "Board Formation & Registration",
+    description: "Bro Moses Ayuba, Bro Joseph Adesida, Bro Joseph Anzaku, and Bro Luke A Ekka bought into the vision. Contributions began while the company registration process was ongoing.",
   },
   {
-    date: "January 2025",
+    date: "Early 2025",
     title: "Treatment Decision",
-    description: "After reviewing surgical options (₦4.5M with 50% success rate), the board decided on alternative Chinese care treatment in Jos.",
+    description: "Hospital in Kaduna suggested surgery costing ₦4.5M with 50% chance (may get better or worse). After meetings, the board decided on alternative/Chinese care in Jos.",
   },
   {
     date: "March 24, 2025",
-    title: "Treatment Begins",
-    description: "Bro Joseph Bala arrived in Jos and began receiving Acupressure, Hydrotherapy, special diet, and other holistic treatments.",
+    title: "Treatment Begins in Jos",
+    description: "Bro Joseph Bala, his father, and Pastor accepted the offer. Bro Joseph arrived in Jos and began receiving Acupressure, Hydrotherapy, special diet, and other treatments.",
   },
   {
     date: "Ongoing",
     title: "Progress & Recovery",
-    description: "Through prayers, dedicated care, and the support of the Bride of Christ family, Bro Joseph continues his recovery journey.",
+    description: "Through prayers, dedicated care, and the support of the Bride of Christ family, Bro Joseph continues his recovery journey. We thank God for the progress so far.",
   },
 ];
 
 const defaultTestimonials = [
   {
-    quote: "When I heard about the foundation and how they were coming together to help me, I couldn't hold back my tears. The body of Christ truly cares.",
+    quote: "When I heard about the foundation and how the brethren were coming together to help me, I couldn't hold back my tears. The body of Christ truly cares.",
     author: "Bro Joseph Bala",
     role: "First BFMAF Beneficiary",
   },
   {
-    quote: "This is what the church should be about - bearing one another's burdens. BFMAF has shown us what it means to be the Bride of Christ.",
+    quote: "Making it the Bride of Christ Family affair was the right decision. When believers who have compassion come together, miracles happen.",
     author: "Pastor Lily Udeh",
     role: "Spiritual Advisor",
   },
   {
-    quote: "Seeing the response from believers across different assemblies reminds us that we are truly one family in Christ.",
+    quote: "We want to thank God for the progress so far. The support and prompt response from everyone when the need arises has been overwhelming.",
     author: "Bro Ezekiel Ekka",
     role: "BFMAF Chairman",
   },
@@ -151,15 +157,19 @@ const SuccessStories = () => {
   // Use featured story data or defaults
   const storyData = featuredStory || {
     patient_name: "Bro Joseph Bala",
-    condition: "Spinal Condition (Paralysis)",
+    condition: "Spinal Condition (Paralysis of both legs)",
     treatment: "Acupressure, Hydrotherapy & Special Diet",
     location: "Kaduna → Jos, Nigeria",
     status: "ongoing",
-    story_content: `Bro Joseph Bala is a young, gifted singer and musician whose life took an unexpected turn when a spinal condition led to paralysis of both his legs. His absence at the National Youth Retreat in November 2024 became the catalyst for something much bigger than anyone could have imagined.
+    story_content: `After the National Youth Retreat of 1st - 3rd November 2024, while in Bro Emperor's office feasting on the results of the meeting, we were struck by the regrettable absence of a young gifted singer and musician, Bro Joseph Bala, who was absent due to a spinal condition that led to paralysis of his two legs.
 
-When the severity of his condition became known, believers came together with one heart and one purpose. The hospital in Kaduna had recommended surgery costing ₦4.5 million with only a 50% chance of success — a decision that could have either helped or worsened his condition.
+We discussed extensively how we could render assistance. The idea was related to our Pastor who supported and encouraged us. Pastor Lily was consulted, and she suggested making it the Bride of Christ Family affair which will involve believers who have compassion. The idea of having a foundation registered was born.
 
-After prayerful deliberation, the founding members of BFMAF opted for alternative Chinese care treatment. On March 24, 2025, Bro Joseph arrived in Jos to begin his treatment journey, receiving Acupressure, Hydrotherapy, and specialized dietary care.
+The vision was shared with Bro Moses Ayuba, Bro Joseph Adesida, Bro Joseph Anzaku, and Bro Luke A Ekka. They all bought the idea and started making contributions while the company registration process was on.
+
+Meanwhile in Kaduna, the hospital Bro Joseph Bala was attending suggested surgery that would cost ₦4.5 million with a 50% chance — he may get better or worse. After series of meetings we concluded to go for alternative/Chinese care. A place in Jos was spotted.
+
+Bro Joseph Bala, his father and Pastor were consulted. They all accepted the offer. The journey began. On the 24th March 2025, Bro Joseph Bala arrived in Jos. He has been on Acupressure, Hydrotherapy, special diet and other holistic treatments.
 
 His story is not just about one man's healing — it's about the power of the Bride of Christ coming together as a family to bear one another's burdens, just as Scripture commands.`,
   };
@@ -212,13 +222,28 @@ His story is not just about one man's healing — it's about the power of the Br
             {/* Featured Case */}
             <section className="py-12 sm:py-20 px-4">
               <div className="container mx-auto max-w-5xl">
-                <div className="bg-gradient-to-br from-primary/5 via-background to-accent/5 rounded-2xl p-6 sm:p-10 border border-primary/10">
+                <div className="bg-gradient-to-br from-primary/5 via-background to-accent/5 rounded-[2rem] p-8 sm:p-12 border border-primary/10 desktop-shadow">
                   <div className="flex flex-col lg:flex-row gap-8 items-start">
                     <div className="lg:w-1/3">
-                      <div className="bg-primary/10 rounded-xl p-8 text-center">
-                        <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Heart className="w-12 h-12 text-primary" />
-                        </div>
+                      <div className="bg-primary/10 rounded-[2rem] p-8 text-center">
+                        {featuredStory?.image_url ? (
+                          <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-primary/20">
+                            <img 
+                              src={featuredStory.image_url} 
+                              alt={storyData.patient_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback to icon if image fails to load
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full bg-primary/20 rounded-full flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12 text-primary"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></div>';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Heart className="w-12 h-12 text-primary" />
+                          </div>
+                        )}
                         <h3 className="text-xl font-bold text-foreground mb-1">{storyData.patient_name}</h3>
                         <p className="text-sm text-muted-foreground mb-3">Our First Case</p>
                         <div className="flex items-center justify-center gap-2 text-xs text-primary">
@@ -227,15 +252,15 @@ His story is not just about one man's healing — it's about the power of the Br
                         </div>
                       </div>
                       <div className="mt-6 space-y-3">
-                        <div className="bg-card p-4 rounded-lg shadow-card">
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl desktop-shadow border border-slate-100 dark:border-slate-700">
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Condition</p>
                           <p className="text-sm font-medium text-foreground">{storyData.condition}</p>
                         </div>
-                        <div className="bg-card p-4 rounded-lg shadow-card">
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl desktop-shadow border border-slate-100 dark:border-slate-700">
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Treatment</p>
                           <p className="text-sm font-medium text-foreground">{storyData.treatment}</p>
                         </div>
-                        <div className="bg-card p-4 rounded-lg shadow-card">
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl desktop-shadow border border-slate-100 dark:border-slate-700">
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</p>
                           <p className="text-sm font-medium text-primary capitalize">
                             {storyData.status === "ongoing" ? "Ongoing Recovery ✓" : storyData.status === "completed" ? "Completed ✓" : storyData.status}
@@ -268,7 +293,7 @@ His story is not just about one man's healing — it's about the power of the Br
                 <div className="text-center mb-10">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <Calendar className="w-6 h-6 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Treatment Journey</h2>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Treatment Journey</h2>
                   </div>
                   <p className="text-muted-foreground">Follow the timeline of treatment and recovery</p>
                 </div>
@@ -289,7 +314,7 @@ His story is not just about one man's healing — it's about the power of the Br
                       
                       {/* Content */}
                       <div className={`ml-10 sm:ml-0 sm:w-1/2 ${index % 2 === 0 ? 'sm:pr-12 sm:text-right' : 'sm:pl-12'}`}>
-                        <div className="bg-card p-5 rounded-xl shadow-card">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700">
                           <span className="text-xs font-semibold text-primary uppercase tracking-wider">{item.date}</span>
                           <h3 className="text-lg font-bold text-foreground mt-1 mb-2">{item.title}</h3>
                           <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -307,14 +332,14 @@ His story is not just about one man's healing — it's about the power of the Br
                 <div className="text-center mb-10">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <Quote className="w-6 h-6 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Words of Gratitude</h2>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Words of Gratitude</h2>
                   </div>
                   <p className="text-muted-foreground">Hear from those touched by this journey</p>
                 </div>
                 
                 <div className="grid md:grid-cols-3 gap-6">
                   {testimonials.slice(0, 3).map((testimonial, index) => (
-                    <div key={index} className="bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-shadow">
+                    <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] desktop-shadow border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all duration-300">
                       <Quote className="w-8 h-8 text-primary/30 mb-4" />
                       <p className="text-muted-foreground italic mb-6 text-sm leading-relaxed">
                         "{testimonial.quote}"
